@@ -12,3 +12,4 @@ SPDX-License-Identifier: MIT
 
 - [Paul Schmiedmayer](https://github.com/PSchmiedmayer)
 - [Paul Goldschmidt](https://github.com/paulgoldschmidt)
+- [Andy Wang](https://github.com/awangwang)
