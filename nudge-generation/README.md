@@ -4,9 +4,11 @@ SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CO
 SPDX-License-Identifier: MIT
 -->
 
-# Nudge Permutation Testing Script
+# Nudge Generation Module
 
-This script generates all possible permutations of the personalization context used in the `planNudges.ts` function and captures the LLM responses for analysis. It supports multiple model backends including OpenAI API, SecureGPT, and local MLX models via HuggingFace.
+This module generates all possible permutations of personalization contexts and captures LLM responses for analysis. It supports multiple model backends including OpenAI API, SecureGPT, and local MLX models.
+
+For project overview and quick start, see the [root README](../README.md).
 
 ## Context Variables Tested
 
@@ -28,7 +30,7 @@ Total permutations: 2 × 4 × 6 × 6 × 3 × 2 × 8 × 3 = **13,824 combinations
 ### 1. Install Node.js Dependencies
 
 ```bash
-cd assets/scripts/nudge-testing
+cd nudge-generation
 npm install
 ```
 
@@ -50,7 +52,6 @@ If you want to test MLX models, you need to set up the Python service:
 
 1. **Install Python dependencies:**
    ```bash
-   cd python_service
    pip install -r requirements.txt
    ```
 
@@ -130,6 +131,7 @@ The script supports the following CLI arguments:
   - `securegpt` - Only SecureGPT models (GPT-5, Gemini 2.5 Pro, etc.)
   - `all` - All available models (default if provider is specified)
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
+- `--output <directory>` - Override output directory (default: data/generated/)
 - `--timeout <seconds>` - Override default generation timeout (default: 60s)
 
 ### Examples
@@ -184,11 +186,15 @@ npm run build && node dist/generateNudgePermutations.js --model gemini-2.5-pro -
 
 ## Output
 
-The script saves results to CSV files with descriptive filenames:
+The script saves results to CSV files in the `data/generated/` directory with descriptive filenames:
 
 - `nudge_permutations_results_<model-ids>_sample_<number>.csv` - Sample results
 - `nudge_permutations_results_<model-ids>_sample_<number>_random.csv` - Random sample results
 - `nudge_permutations_results_<model-ids>_full.csv` - Full permutation results
+
+The `data/` directory structure is shared with the `nudge-evaluation` module:
+- `data/generated/` - CSV files from nudge generation
+- `data/evaluated/` - Analysis outputs from evaluation tools
 
 ## Output CSV Columns
 
@@ -216,6 +222,10 @@ The CSV output includes the following columns:
 - `latencyMs` - Generation latency in milliseconds
 - `error` - Any error message if the API call failed
 
+## Next Steps
+
+After generating nudges, analyze them using the [nudge-evaluation](../nudge-evaluation/README.md) module.
+
 ## Architecture
 
 The script uses a backend abstraction layer that supports multiple model providers:
@@ -234,7 +244,7 @@ This architecture makes it easy to add new model providers in the future (e.g., 
 If you see a warning about the Python service not being available:
 1. Ensure the Python service is running: `npm run start:python-service`
 2. Check that the service URL is correct (default: http://localhost:8000)
-3. Verify Python dependencies are installed: `pip install -r python_service/requirements.txt`
+3. Verify Python dependencies are installed: `pip install -r requirements.txt`
 
 ### Model Loading Errors
 

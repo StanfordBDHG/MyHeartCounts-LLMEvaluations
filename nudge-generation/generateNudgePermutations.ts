@@ -425,7 +425,7 @@ class NudgePermutationTester {
     this.modelsToTest = models
   }
 
-  async runAllPermutations(maxPermutations?: number, randomize = false): Promise<void> {
+  async runAllPermutations(maxPermutations?: number, randomize = false, outputDir?: string): Promise<void> {
     if (this.modelsToTest.length === 0) {
       throw new Error('No models configured for testing. Use --model, --models, or --provider to select models.')
     }
@@ -509,9 +509,19 @@ class NudgePermutationTester {
     }
     
     const suffix = maxPermutations ? `_sample_${maxPermutations}${randomize ? '_random' : ''}` : '_full'
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = path.dirname(__filename)
-    const outputPath = path.join(__dirname, `nudge_permutations_results_${modelIds}${suffix}.csv`)
+    
+    // Use provided output directory or fall back to default (two levels up from dist/)
+    let dataDir: string
+    if (outputDir) {
+      dataDir = path.resolve(outputDir)
+    } else {
+      const __filename = fileURLToPath(import.meta.url)
+      const __dirname = path.dirname(__filename)
+      dataDir = path.join(__dirname, '../../data/generated')
+    }
+    
+    fs.mkdirSync(dataDir, { recursive: true })
+    const outputPath = path.join(dataDir, `nudge_permutations_results_${modelIds}${suffix}.csv`)
     this.writeResultsToCSV(this.results, outputPath)
     console.log(`\nResults written to ${outputPath}`)
   }
@@ -523,6 +533,7 @@ function parseCLIArgs(): {
   modelIds?: string[]
   provider?: string
   pythonServiceUrl?: string
+  outputDir?: string
 } {
   const args = process.argv.slice(2)
   const result: {
@@ -531,6 +542,7 @@ function parseCLIArgs(): {
     modelIds?: string[]
     provider?: string
     pythonServiceUrl?: string
+    outputDir?: string
   } = {
     randomize: false,
   }
@@ -562,6 +574,11 @@ function parseCLIArgs(): {
   if (args.includes('--python-service-url')) {
     const index = args.indexOf('--python-service-url')
     result.pythonServiceUrl = args[index + 1]
+  }
+
+  if (args.includes('--output')) {
+    const index = args.indexOf('--output')
+    result.outputDir = args[index + 1]
   }
 
   return result
@@ -623,7 +640,7 @@ async function main() {
 
   const tester = new NudgePermutationTester(openAIApiKey, pythonServiceUrl, secureGPTApiKey)
   tester.setModelsToTest(modelsToTest)
-  await tester.runAllPermutations(cliArgs.maxPermutations, cliArgs.randomize)
+  await tester.runAllPermutations(cliArgs.maxPermutations, cliArgs.randomize, cliArgs.outputDir)
   console.log('Testing complete!')
 }
 

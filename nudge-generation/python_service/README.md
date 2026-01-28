@@ -8,16 +8,7 @@ SPDX-License-Identifier: MIT
 
 This service provides an HTTP API for running MLX models locally using the `mlx-lm` library.
 
-## Setup
-
-1. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Ensure you have Apple Silicon (M1/M2/M3) Mac - MLX models require Apple Silicon
-
-3. Models will be automatically downloaded from Hugging Face on first use
+For setup and overview, see the [root README](../../README.md).
 
 ## Running the Service
 
@@ -72,9 +63,8 @@ All models from the `mlx-community` organization on Hugging Face are supported. 
 Special handling is implemented for:
 - `mlx-community/SmolLM3-3B-4bit` - requires system message with "/no_think" content
 
-## Notes
+## Implementation Details
 
 - Models are loaded on-demand for each request (not cached in memory)
-- First request for each model may be slower as the model needs to be downloaded/loaded
 - The service uses chat templates automatically for proper prompt formatting
 
