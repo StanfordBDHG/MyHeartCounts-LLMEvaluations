@@ -67,7 +67,7 @@ Content-Type: application/json
 
 ## Supported Models
 
-All models from the `mlx-community` organization on Hugging Face are supported. Models are loaded on-demand (not cached) for simplicity.
+All models from the `mlx-community` organization on Hugging Face are supported.
 
 Special handling is implemented for:
 - `mlx-community/SmolLM3-3B-4bit` - requires system message with "/no_think" content
