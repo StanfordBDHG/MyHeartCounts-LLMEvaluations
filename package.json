@@ -1,0 +1,30 @@
+{
+  "name": "myheartcounts-llmevaluations",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Stanford Biodesign Digital Health MyHeart Counts open-source project",
+  "keywords": [
+    "Stanford",
+    "Biodesign",
+    "My heart counts",
+    "LLM",
+    "Evaluations"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StanfordBDHG/MyHeartCounts-LLMEvaluations"
+  },
+  "scripts": {
+    "install": "npm --prefix nudge-generation install",
+    "lint": "npm --prefix nudge-generation run lint",
+    "lint:fix": "npm --prefix nudge-generation run lint:fix",
+    "lint:strict": "npm --prefix nudge-generation run lint:strict",
+    "build": "npm --prefix nudge-generation run build",
+    "test:ci": "npm --prefix nudge-generation run test:ci"
+  },
+  "devDependencies": {
+    "@stanfordspezi/spezi-web-configurations": "^0.6.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1"
+  }
+}

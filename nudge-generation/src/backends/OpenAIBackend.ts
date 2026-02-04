@@ -6,26 +6,27 @@
 // SPDX-License-Identifier: MIT
 //
 
-import OpenAI from 'openai'
-import { type ModelBackend, type GenerateOptions } from './ModelBackend.js'
-import { type ModelConfig } from '../config/models.js'
+import OpenAI from "openai";
+import { type ModelBackend, type GenerateOptions } from "./ModelBackend.js";
+import { type ModelConfig } from "../config/models.js";
 
 export class OpenAIBackend implements ModelBackend {
-  readonly modelId: string
-  readonly provider = 'openai' as const
-  private openai: OpenAI
+  readonly modelId: string;
+  readonly provider = "openai" as const;
+  private openai: OpenAI;
 
   constructor(config: ModelConfig, openAIApiKey: string) {
-    this.modelId = config.id
+    this.modelId = config.id;
     this.openai = new OpenAI({
       apiKey: openAIApiKey,
-    })
+    });
   }
 
   async generate(prompt: string, options?: GenerateOptions): Promise<string> {
-    const timeout = options?.timeout || 120000
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), timeout)
+    const timeout: number =
+      typeof options?.timeout === "number" ? options.timeout : 120000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await this.openai.chat.completions.create(
@@ -33,42 +34,44 @@ export class OpenAIBackend implements ModelBackend {
           model: this.modelId,
           messages: [
             {
-              role: 'user',
+              role: "user",
               content: prompt,
             },
           ],
           max_tokens: options?.maxTokens,
           temperature: options?.temperature,
           response_format: {
-            type: 'json_schema',
+            type: "json_schema",
             json_schema: {
-              name: 'nudge_messages',
+              name: "nudge_messages",
               schema: {
-                type: 'object',
+                type: "object",
                 properties: {
                   nudges: {
-                    type: 'array',
+                    type: "array",
                     items: {
-                      type: 'object',
+                      type: "object",
                       properties: {
                         title: {
-                          type: 'string',
-                          description: 'Short summary/call to action for the push notification',
+                          type: "string",
+                          description:
+                            "Short summary/call to action for the push notification",
                         },
                         body: {
-                          type: 'string',
-                          description: 'Motivational message content for the push notification',
+                          type: "string",
+                          description:
+                            "Motivational message content for the push notification",
                         },
                       },
-                      required: ['title', 'body'],
+                      required: ["title", "body"],
                       additionalProperties: false,
                     },
                     minItems: 7,
                     maxItems: 7,
-                    description: 'Exactly 7 nudge messages',
+                    description: "Exactly 7 nudge messages",
                   },
                 },
-                required: ['nudges'],
+                required: ["nudges"],
                 additionalProperties: false,
               },
             },
@@ -77,24 +80,23 @@ export class OpenAIBackend implements ModelBackend {
         {
           signal: controller.signal,
         },
-      )
+      );
 
-      clearTimeout(timeoutId)
-      return response.choices[0].message.content || ''
+      clearTimeout(timeoutId);
+      return response.choices[0].message.content ?? "";
     } catch (error) {
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error(`Request timeout after ${timeout / 1000} seconds`)
+        if (error.name === "AbortError") {
+          throw new Error(`Request timeout after ${timeout / 1000} seconds`);
         }
-        throw error
+        throw error;
       }
-      throw new Error(`Unknown error: ${String(error)}`)
+      throw new Error(`Unknown error: ${String(error)}`);
     }
   }
 
   supportsModel(modelId: string): boolean {
-    return modelId === this.modelId
+    return modelId === this.modelId;
   }
 }
-

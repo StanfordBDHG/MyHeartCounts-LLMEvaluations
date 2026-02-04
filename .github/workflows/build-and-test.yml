@@ -24,3 +24,22 @@ jobs:
   markdownlinkcheck:
     name: Markdown Link Check
     uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.6.x
+      - name: Install Dependencies
+        run: npm run install
+      - name: Build
+        run: npm run build
+      - name: Lint
+        run: npm run lint:strict
+    permissions:
+      contents: read
+  
