@@ -38,8 +38,16 @@ jobs:
         run: npm run install
       - name: Build
         run: npm run build
-      - name: Lint
+      - name: Lint Typescript files with ESLint
         run: npm run lint:strict
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pyrefly
+        run: pip install pyrefly
+      - name: Lint Python files with Pyrefly
+        run: pyrefly check
     permissions:
       contents: read
   
