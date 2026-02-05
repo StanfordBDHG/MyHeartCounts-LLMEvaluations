@@ -6,9 +6,9 @@
 # SPDX-License-Identifier: MIT
 #
 
-mlx>=0.18.0
-mlx-lm>=0.20.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 pydantic>=2.9.0
 
+mlx>=0.18.0; platform_machine == "arm64"
+mlx-lm>=0.20.0; platform_machine == "arm64"
