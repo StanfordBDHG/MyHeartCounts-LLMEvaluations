@@ -24,3 +24,32 @@ jobs:
   markdownlinkcheck:
     name: Markdown Link Check
     uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.6.x
+      - name: Install Dependencies
+        run: npm run install
+      - name: Build
+        run: npm run build
+      - name: Lint Typescript files with ESLint
+        run: npm run lint:strict
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: pip install -r nudge-generation/python_service/requirements.txt
+      - name: Install pyrefly
+        run: pip install pyrefly
+      - name: Lint Python files with Pyrefly
+        run: pyrefly check
+    permissions:
+      contents: read
+  

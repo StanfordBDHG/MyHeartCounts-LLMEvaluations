@@ -7,18 +7,18 @@
 //
 
 export interface GenerateOptions {
-  maxTokens?: number
-  temperature?: number
+  maxTokens?: number;
+  temperature?: number;
+  timeout?: number;
   // Extensible for provider-specific options
-  [key: string]: any
+  [key: string]: unknown;
 }
 
-export type ModelProvider = 'openai' | 'mlx-python' | 'securegpt'
+export type ModelProvider = "openai" | "mlx-python" | "securegpt";
 
 export interface ModelBackend {
-  readonly modelId: string
-  readonly provider: ModelProvider
-  generate(prompt: string, options?: GenerateOptions): Promise<string>
-  supportsModel(modelId: string): boolean
+  readonly modelId: string;
+  readonly provider: ModelProvider;
+  generate(prompt: string, options?: GenerateOptions): Promise<string>;
+  supportsModel(modelId: string): boolean;
 }
-

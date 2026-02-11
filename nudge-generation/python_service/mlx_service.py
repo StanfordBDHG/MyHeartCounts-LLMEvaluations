@@ -42,7 +42,7 @@ async def generate_text(request: GenerateRequest):
     """
     try:
         model_name = request.model_id
-        model, tokenizer = load(model_name)
+        model, tokenizer, *_ = load(model_name)
         
         # Format prompt with chat template
         context = [{"role": "user", "content": request.prompt}]

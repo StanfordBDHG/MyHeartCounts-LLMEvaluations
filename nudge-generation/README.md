@@ -44,6 +44,8 @@ export OPENAI_API_KEY="your-api-key-here"
 export SECUREGPT_API_KEY="your-securegpt-api-key-here"
 ```
 
+**Note:** The machine must be connected to the full Stanford VPN for SecureGPT API to work.
+
 ### 3. Setup Python Service (for MLX models)
 
 If you want to test MLX models, you need to set up the Python service:

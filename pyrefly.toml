@@ -1,0 +1,6 @@
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+
+ignore-missing-imports = ["mlx_lm", "mlx"]
