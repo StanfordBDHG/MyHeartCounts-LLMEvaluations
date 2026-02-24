@@ -1,0 +1,59 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { parse } from "csv-parse/sync";
+import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
+
+type EvaluatorCsvRow = {
+  email?: string;
+  evaluator_id?: string;
+  active?: string;
+};
+
+async function main() {
+  const filePath = process.argv[2];
+  if (!filePath) {
+    throw new Error("Usage: npm run import:evaluators -- <csv-file-path>");
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  const csv = await fs.readFile(path.resolve(filePath), "utf-8");
+  const rows = parse(csv, { columns: true, skip_empty_lines: true }) as EvaluatorCsvRow[];
+
+  const upserts = [];
+  for (const row of rows) {
+    const email = row.email?.trim().toLowerCase();
+    const evaluatorId = row.evaluator_id?.trim();
+    if (!email || !evaluatorId) {
+      continue;
+    }
+    upserts.push({
+      email,
+      evaluator_code_hash: await bcrypt.hash(evaluatorId, 10),
+      active: row.active?.trim().toLowerCase() !== "false"
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { persistSession: false }
+  });
+
+  const { error } = await supabase
+    .from("evaluators")
+    .upsert(upserts, { onConflict: "email" });
+  if (error) {
+    throw error;
+  }
+
+  console.log(`Imported ${upserts.length} evaluators.`);
+}
+
+void main().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});
