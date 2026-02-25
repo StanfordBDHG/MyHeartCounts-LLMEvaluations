@@ -170,7 +170,6 @@ def compute_features(text: str, feature_type: str = "body") -> Dict[str, Any]:
     action_count = sum(
         1 for token in doc
         if token.pos_ == "VERB" and token.dep_ not in {"aux", "cop"}
-        and (token.text.lower() in ACTION_VERBS or token.lemma_.lower() in ACTION_VERBS)
     )
     
     # Temporal reference
@@ -187,7 +186,7 @@ def compute_features(text: str, feature_type: str = "body") -> Dict[str, Any]:
     
     # Build result dictionary with appropriate prefix
     prefix = feature_type
-    result = {
+    result: Dict[str, Any] = {
         f"{prefix}_word_count": word_count,
         f"{prefix}_sentiment": sentiment_score,
         f"{prefix}_action_verb_frequency": action_count,

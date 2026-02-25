@@ -3,4 +3,10 @@ project-includes = [
     "**/*.ipynb",
 ]
 
-ignore-missing-imports = ["mlx_lm", "mlx"]
+ignore-missing-imports = [
+    "mlx_lm",
+    "mlx",
+    "spacy",
+    "textstat",
+    "vaderSentiment.vaderSentiment",
+]

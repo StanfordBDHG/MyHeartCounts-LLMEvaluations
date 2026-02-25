@@ -659,9 +659,9 @@ const parseCLIArgs = (): {
     result.pythonServiceUrl = args[index + 1];
   }
 
-  if (args.includes('--output')) {
-    const index = args.indexOf('--output')
-    result.outputDir = args[index + 1]
+  if (args.includes("--output")) {
+    const index = args.indexOf("--output");
+    result.outputDir = args[index + 1];
   }
 
   return result;
