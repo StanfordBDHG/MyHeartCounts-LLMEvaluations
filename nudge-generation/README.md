@@ -132,6 +132,8 @@ The script supports the following CLI arguments:
   - `securegpt` - Only SecureGPT models (GPT-5, Gemini 2.5 Pro, etc.)
   - `all` - All available models (default if provider is specified)
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
+- `--require-stage-of-change` - Only generate/test permutations where `stateOfChange` is provided (non-null)
+- `--require-comorbidity` - Only generate/test permutations where a disease/comorbidity is provided (non-null)
 - `--timeout <seconds>` - Override default generation timeout (default: 60s)
 
 ### Examples
@@ -154,6 +156,9 @@ npm run build && node dist/generateNudgePermutations.js --model gpt-5 --sample 5
 
 # Test SecureGPT Gemini 2.5 Pro
 npm run build && node dist/generateNudgePermutations.js --model gemini-2.5-pro --sample 5
+
+# Require stage of change and comorbidity in all tested permutations
+npm run build && node dist/generateNudgePermutations.js --provider all --sample 10 --require-stage-of-change --require-comorbidity
 ```
 
 ## Available Models
