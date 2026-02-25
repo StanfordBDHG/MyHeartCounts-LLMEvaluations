@@ -21,7 +21,7 @@ import sys
 import argparse
 import warnings
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, cast
 
 import pandas as pd
 import spacy
@@ -46,6 +46,22 @@ TEMPORAL_KEYWORDS = {
     "today", "tomorrow", "tonight", "morning", "evening", "daily",
     "each day", "every day", "this week", "next week", "in 10 minutes", "routine"
 }
+
+
+def _compute_readability(text: str) -> float:
+    """
+    Compute Flesch Reading Ease across textstat API variants.
+    """
+    module_level_fn = getattr(textstat, "flesch_reading_ease", None)
+    if callable(module_level_fn):
+        return float(cast(Any, module_level_fn)(text))
+
+    textstat_obj = getattr(textstat, "textstat", None)
+    object_level_fn = getattr(textstat_obj, "flesch_reading_ease", None)
+    if callable(object_level_fn):
+        return float(cast(Any, object_level_fn)(text))
+
+    return 0.0
 
 
 def _try_parse_json(text: str) -> Any:
@@ -182,7 +198,7 @@ def compute_features(text: str, feature_type: str = "body") -> Dict[str, Any]:
     exclam_count = text.count("!")
     
     # Readability (Flesch Reading Ease)
-    readability = textstat.flesch_reading_ease(text)
+    readability = _compute_readability(text)
     
     # Build result dictionary with appropriate prefix
     prefix = feature_type
