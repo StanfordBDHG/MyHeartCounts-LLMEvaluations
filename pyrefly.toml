@@ -6,7 +6,4 @@ project-includes = [
 ignore-missing-imports = [
     "mlx_lm",
     "mlx",
-    "spacy",
-    "textstat",
-    "vaderSentiment.vaderSentiment",
 ]
