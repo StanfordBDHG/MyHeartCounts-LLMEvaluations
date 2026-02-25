@@ -45,7 +45,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Python dependencies
-        run: pip install -r nudge-generation/python_service/requirements.txt
+        run: |
+          pip install -r nudge-generation/python_service/requirements.txt
+          pip install -r nudge-evaluation/requirements.txt
       - name: Install pyrefly
         run: pip install pyrefly
       - name: Lint Python files with Pyrefly

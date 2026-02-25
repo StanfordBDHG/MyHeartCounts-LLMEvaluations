@@ -285,11 +285,20 @@ class NudgePermutationTester {
     }
   }
 
-  private generateAllPermutations(): TestContext[] {
+  private generateAllPermutations(
+    requireStageOfChange = false,
+    requireComorbidity = false,
+  ): TestContext[] {
     const genderOptions = ["male", "female"];
     const ageOptions = ["<35", "35-50", "51-65", ">65"];
-    const diseaseOptions = [null, ...Object.values(Disease)];
-    const stageOptions = [null, ...Object.values(StageOfChange)];
+    const diseaseOptions =
+      requireComorbidity ?
+        Object.values(Disease)
+      : [null, ...Object.values(Disease)];
+    const stageOptions =
+      requireStageOfChange ?
+        Object.values(StageOfChange)
+      : [null, ...Object.values(StageOfChange)];
     const educationOptions = [...Object.values(EducationLevel)];
     const languageOptions = ["en", "en"];
     const workoutTypeOptions = [
@@ -446,6 +455,9 @@ class NudgePermutationTester {
   async runAllPermutations(
     maxPermutations?: number,
     randomize = false,
+    outputDir?: string,
+    requireStageOfChange = false,
+    requireComorbidity = false,
   ): Promise<void> {
     if (this.modelsToTest.length === 0) {
       throw new Error(
@@ -474,7 +486,10 @@ class NudgePermutationTester {
       }
     }
 
-    const allPermutations = this.generateAllPermutations();
+    const allPermutations = this.generateAllPermutations(
+      requireStageOfChange,
+      requireComorbidity,
+    );
 
     let permutationsToTest: TestContext[];
     if (maxPermutations) {
@@ -558,12 +573,22 @@ class NudgePermutationTester {
 
     const suffix =
       maxPermutations ?
-        `_sample_${maxPermutations}${randomize ? "_random" : ""}`
-      : "_full";
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
+        `_sample_${maxPermutations}${randomize ? "_random" : ""}${requireStageOfChange ? "_require-stage" : ""}${requireComorbidity ? "_require-comorbidity" : ""}`
+      : `_full${requireStageOfChange ? "_require-stage" : ""}${requireComorbidity ? "_require-comorbidity" : ""}`;
+
+    // Use provided output directory or fall back to default (two levels up from dist/)
+    let dataDir: string;
+    if (outputDir) {
+      dataDir = path.resolve(outputDir);
+    } else {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      dataDir = path.join(__dirname, "../../data/generated");
+    }
+
+    fs.mkdirSync(dataDir, { recursive: true });
     const outputPath = path.join(
-      __dirname,
+      dataDir,
       `nudge_permutations_results_${modelIds}${suffix}.csv`,
     );
     this.writeResultsToCSV(this.results, outputPath);
@@ -574,19 +599,27 @@ class NudgePermutationTester {
 const parseCLIArgs = (): {
   maxPermutations?: number;
   randomize: boolean;
+  requireStageOfChange: boolean;
+  requireComorbidity: boolean;
   modelIds?: string[];
   provider?: string;
   pythonServiceUrl?: string;
+  outputDir?: string;
 } => {
   const args = process.argv.slice(2);
   const result: {
     maxPermutations?: number;
     randomize: boolean;
+    requireStageOfChange: boolean;
+    requireComorbidity: boolean;
     modelIds?: string[];
     provider?: string;
     pythonServiceUrl?: string;
+    outputDir?: string;
   } = {
     randomize: false,
+    requireStageOfChange: false,
+    requireComorbidity: false,
   };
 
   if (args.includes("--sample")) {
@@ -596,6 +629,14 @@ const parseCLIArgs = (): {
 
   if (args.includes("--random")) {
     result.randomize = true;
+  }
+
+  if (args.includes("--require-stage-of-change")) {
+    result.requireStageOfChange = true;
+  }
+
+  if (args.includes("--require-comorbidity")) {
+    result.requireComorbidity = true;
   }
 
   if (args.includes("--model")) {
@@ -616,6 +657,11 @@ const parseCLIArgs = (): {
   if (args.includes("--python-service-url")) {
     const index = args.indexOf("--python-service-url");
     result.pythonServiceUrl = args[index + 1];
+  }
+
+  if (args.includes("--output")) {
+    const index = args.indexOf("--output");
+    result.outputDir = args[index + 1];
   }
 
   return result;
@@ -691,7 +737,13 @@ const main = async () => {
     secureGPTApiKey,
   );
   tester.setModelsToTest(modelsToTest);
-  await tester.runAllPermutations(cliArgs.maxPermutations, cliArgs.randomize);
+  await tester.runAllPermutations(
+    cliArgs.maxPermutations,
+    cliArgs.randomize,
+    cliArgs.outputDir,
+    cliArgs.requireStageOfChange,
+    cliArgs.requireComorbidity,
+  );
   console.log("Testing complete!");
 };
 

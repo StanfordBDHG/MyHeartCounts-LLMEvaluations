@@ -146,3 +146,6 @@ dist
 
 # Python bytecode
 __pycache__/
+
+# CSV files
+*.csv
