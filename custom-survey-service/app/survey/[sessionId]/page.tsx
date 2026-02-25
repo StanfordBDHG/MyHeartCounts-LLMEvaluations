@@ -313,21 +313,29 @@ export default function SurveyPage({
                     </div>
                   </td>
                   {(question.response_type === "yes_no" ? [1, 7] : [1, 2, 3, 4, 5, 6, 7]).map(
-                    (scoreValue) => (
-                    <td key={scoreValue}>
-                      <input
-                        type="radio"
-                        name={keyFor(question.id, nudge.id)}
-                        checked={scores[keyFor(question.id, nudge.id)] === scoreValue}
-                        onChange={() =>
-                          setScores((current) => ({
-                            ...current,
-                            [keyFor(question.id, nudge.id)]: scoreValue
-                          }))
-                        }
-                      />
+                    (scoreValue) => {
+                    const inputId = `score-${question.id}-${nudge.id}-${scoreValue}`;
+
+                    return (
+                    <td key={scoreValue} className="matrix-score-cell">
+                      <label htmlFor={inputId} className="matrix-score-hit-area">
+                        <input
+                          id={inputId}
+                          className="matrix-score-radio"
+                          type="radio"
+                          name={keyFor(question.id, nudge.id)}
+                          checked={scores[keyFor(question.id, nudge.id)] === scoreValue}
+                          onChange={() =>
+                            setScores((current) => ({
+                              ...current,
+                              [keyFor(question.id, nudge.id)]: scoreValue
+                            }))
+                          }
+                        />
+                      </label>
                     </td>
-                    )
+                    );
+                    }
                   )}
                 </tr>
               ))}
