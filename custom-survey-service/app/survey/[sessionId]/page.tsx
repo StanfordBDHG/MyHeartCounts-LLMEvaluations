@@ -163,9 +163,6 @@ export default function SurveyPage({
         return;
       }
       const payload = (await response.json()) as SessionPayload;
-      // #region agent log
-      fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H3", location: "app/survey/[sessionId]/page.tsx:loadSession", message: "Client received session payload", data: { sessionId: payload.sessionId, nudgeCount: payload.nudges.length, questionKeys: payload.questions.map((question) => question.stable_key), nudges: payload.nudges.map((nudge) => { const topLevel = asRecord(nudge.metadata_json) ?? {}; const prompt = asRecord(topLevel.prompt_metadata); return { id: nudge.id, hasTopLevel: Boolean(asRecord(nudge.metadata_json)), hasPromptMetadata: Boolean(prompt), topLevelKeys: Object.keys(topLevel), promptKeys: prompt ? Object.keys(prompt) : [] }; }) }, timestamp: Date.now() }) }).catch(() => {});
-      // #endregion
       setSession(payload);
     }
 
@@ -180,24 +177,6 @@ export default function SurveyPage({
   }, [session]);
 
   const answeredCount = Object.keys(scores).length;
-
-  useEffect(() => {
-    if (!session) {
-      return;
-    }
-
-    const questionDiagnostics = session.questions.map((question) => ({
-      stable_key: question.stable_key,
-      field: fieldForQuestion(question.stable_key),
-      shownForNudges: session.nudges
-        .map((nudge) => metadataForQuestion(question, nudge).length)
-        .filter((count) => count > 0).length
-    }));
-
-    // #region agent log
-    fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H4", location: "app/survey/[sessionId]/page.tsx:diagnostics", message: "Per-question metadata display diagnostics", data: { sessionId: session.sessionId, questionDiagnostics }, timestamp: Date.now() }) }).catch(() => {});
-    // #endregion
-  }, [session]);
 
   async function submit() {
     if (!session) {

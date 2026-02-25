@@ -15,10 +15,10 @@
     "url": "https://github.com/StanfordBDHG/MyHeartCounts-LLMEvaluations"
   },
   "scripts": {
-    "install": "npm --prefix nudge-generation install",
-    "lint": "npm --prefix nudge-generation run lint",
-    "lint:fix": "npm --prefix nudge-generation run lint:fix",
-    "lint:strict": "npm --prefix nudge-generation run lint:strict",
+    "install": "npm --prefix nudge-generation install && npm --prefix custom-survey-service install",
+    "lint": "npm --prefix nudge-generation run lint && npm --prefix custom-survey-service run lint",
+    "lint:fix": "npm --prefix nudge-generation run lint:fix && npm --prefix custom-survey-service run lint:fix",
+    "lint:strict": "npm --prefix nudge-generation run lint:strict && npm --prefix custom-survey-service run lint:strict",
     "build": "npm --prefix nudge-generation run build",
     "test:ci": "npm --prefix nudge-generation run test:ci"
   },

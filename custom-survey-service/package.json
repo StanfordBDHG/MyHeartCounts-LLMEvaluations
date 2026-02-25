@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit",
+    "lint": "eslint . && tsc --noEmit",
+    "lint:fix": "eslint . --fix && tsc --noEmit",
+    "lint:strict": "eslint . --max-warnings=0 && tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "import:nudges": "tsx scripts/importNudges.ts",
     "import:evaluators": "tsx scripts/importEvaluators.ts"
@@ -16,8 +18,8 @@
     "bcryptjs": "^3.0.3",
     "next": "^16.1.6",
     "react": "^19.2.0",
-    "react-markdown": "^10.1.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
@@ -25,6 +27,8 @@
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "csv-parse": "^6.1.0",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

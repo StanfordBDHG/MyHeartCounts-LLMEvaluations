@@ -13,9 +13,6 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  // #region agent log
-  fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H1", location: "app/api/sessions/[id]/route.ts:GET:entry", message: "Session API entry", data: { sessionId: id }, timestamp: Date.now() }) }).catch(() => {});
-  // #endregion
   const supabase = getServiceClient();
 
   const [{ data: session }, { data: bundle }, { data: nudges }, { data: questions }] =
@@ -39,15 +36,8 @@ export async function GET(
     ]);
 
   if (!session || !bundle || !nudges || !questions) {
-    // #region agent log
-    fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H1", location: "app/api/sessions/[id]/route.ts:missing", message: "Session API missing rows", data: { hasSession: Boolean(session), hasBundle: Boolean(bundle), hasNudges: Boolean(nudges), hasQuestions: Boolean(questions) }, timestamp: Date.now() }) }).catch(() => {});
-    // #endregion
     return NextResponse.json({ error: "Session not found." }, { status: 404 });
   }
-
-  // #region agent log
-  fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H1", location: "app/api/sessions/[id]/route.ts:nudges-raw", message: "Raw nudges metadata presence", data: { nudgeCount: nudges.length, nudges: nudges.map((row) => { const rowNudge = oneOrNull(row.nudges as { id: string; metadata_json?: Record<string, unknown> } | Array<{ id: string; metadata_json?: Record<string, unknown> }> | null); const metadata = rowNudge?.metadata_json; const metadataRecord = metadata && typeof metadata === "object" && !Array.isArray(metadata) ? (metadata as Record<string, unknown>) : null; const promptMetadata = metadataRecord?.prompt_metadata; const promptRecord = promptMetadata && typeof promptMetadata === "object" && !Array.isArray(promptMetadata) ? (promptMetadata as Record<string, unknown>) : null; return { id: rowNudge?.id ?? null, hasMetadataJson: Boolean(metadataRecord), hasPromptMetadata: Boolean(promptRecord), promptMetadataKeys: promptRecord ? Object.keys(promptRecord) : [] }; }) }, timestamp: Date.now() }) }).catch(() => {});
-  // #endregion
 
   const responsePayload = {
     sessionId: session.id,
@@ -137,10 +127,6 @@ export async function GET(
         } => Boolean(value)
       )
   };
-
-  // #region agent log
-  fetch("http://127.0.0.1:7243/ingest/6f350a05-6cd3-4424-8db9-045ce4024203", { method: "POST", headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "44c70f" }, body: JSON.stringify({ sessionId: "44c70f", runId: "pre-fix", hypothesisId: "H2", location: "app/api/sessions/[id]/route.ts:response", message: "Session API response metadata presence", data: { nudgeCount: responsePayload.nudges.length, nudges: responsePayload.nudges.map((nudge) => { const metadata = nudge.metadata_json; const metadataRecord = metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : null; const promptMetadata = metadataRecord?.prompt_metadata; const promptRecord = promptMetadata && typeof promptMetadata === "object" && !Array.isArray(promptMetadata) ? promptMetadata : null; return { id: nudge.id, hasMetadataJson: Boolean(metadataRecord), hasPromptMetadata: Boolean(promptRecord), promptMetadataKeys: promptRecord ? Object.keys(promptRecord as Record<string, unknown>) : [] }; }) }, timestamp: Date.now() }) }).catch(() => {});
-  // #endregion
 
   return NextResponse.json(responsePayload);
 }
