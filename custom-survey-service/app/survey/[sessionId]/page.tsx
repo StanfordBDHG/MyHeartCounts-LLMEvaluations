@@ -52,6 +52,19 @@ type MetadataDisplayRow = {
   value: string;
 };
 
+const STAGE_OF_CHANGE_DESCRIPTION_BY_KEY: Record<string, string> = {
+  precontemplation:
+    "This person is in the pre-contemplation stage of exercise change. This person does not plan to start exercising in the next six months and does not consider their current behavior a problem.",
+  contemplation:
+    "This person is in the contemplation stage of changing their exercise. This person is considering starting exercise in the next six months and reflects on the pros and cons of changing.",
+  preparation:
+    "This person is in the preparation stage of changing their exercise habits. This person is ready to begin exercising in the next 30 days and has begun taking small steps.",
+  action:
+    "This person is in the action stage of exercise change. This person has recently started exercising (within the last six months) and is building a new, healthy routine.",
+  maintenance:
+    "This person is in the maintenance stage of exercise change. This person has maintained their exercise routine for more than six months and wants to sustain that change by avoiding relapses to previous stages."
+};
+
 function keyFor(questionId: string, nudgeId: string): string {
   return `${questionId}:${nudgeId}`;
 }
@@ -116,6 +129,15 @@ function labelForField(field: MetadataField): string {
   }
 }
 
+function stageDescriptionForValue(rawStage: string): string | null {
+  const key = rawStage.trim().toLowerCase().replace(/[^a-z]/g, "");
+  return STAGE_OF_CHANGE_DESCRIPTION_BY_KEY[key] ?? null;
+}
+
+function displayPromptText(promptText: string): string {
+  return promptText.replace(/^\s*\[[^\]]+\]\s*/u, "").trim();
+}
+
 function metadataForQuestion(question: Question, nudge: Nudge): MetadataDisplayRow[] {
   const field = fieldForQuestion(question.stable_key);
   if (!field) {
@@ -132,7 +154,17 @@ function metadataForQuestion(question: Question, nudge: Nudge): MetadataDisplayR
     return [];
   }
 
-  return [{ label: labelForField(field), value }];
+  const rows: MetadataDisplayRow[] = [{ label: labelForField(field), value }];
+  if (field === "stage_of_change") {
+    const description = stageDescriptionForValue(value);
+    if (description) {
+      rows.push({
+        label: "Stage description",
+        value: description
+      });
+    }
+  }
+  return rows;
 }
 
 export default function SurveyPage({
@@ -184,7 +216,23 @@ export default function SurveyPage({
     return session.questions.filter((question) => !isOptionalQuestion(question)).length * session.nudges.length;
   }, [session]);
 
-  const answeredCount = Object.keys(scores).length;
+  const answeredRequiredCount = useMemo(() => {
+    if (!session) {
+      return 0;
+    }
+    let count = 0;
+    for (const question of session.questions) {
+      if (isOptionalQuestion(question)) {
+        continue;
+      }
+      for (const nudge of session.nudges) {
+        if (typeof scores[keyFor(question.id, nudge.id)] === "number") {
+          count += 1;
+        }
+      }
+    }
+    return count;
+  }, [scores, session]);
 
   async function submit() {
     if (!session) {
@@ -257,18 +305,18 @@ export default function SurveyPage({
           Bundle: <strong>{session.bundle.name}</strong>
         </p>
         <p className="muted">
-          Complete all matrix cells. This session uses the same 3 nudges for all
+          Complete all matrix cells. This session uses the same 4 nudges for all
           selected questions.
         </p>
         <p>
-          Progress: {answeredCount}/{requiredAnswerCount}
+          Progress: {answeredRequiredCount}/{requiredAnswerCount}
         </p>
       </div>
 
       {session.questions.map((question) => (
         <div key={question.id} className="card">
           <h3>
-            {question.prompt_text}
+            {displayPromptText(question.prompt_text)}
             {isOptionalQuestion(question) ? " (Optional)" : ""}
           </h3>
           {question.body_markdown ? (

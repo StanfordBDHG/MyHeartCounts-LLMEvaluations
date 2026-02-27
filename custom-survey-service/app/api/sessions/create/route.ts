@@ -10,7 +10,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyEvaluatorCredentials } from "@/lib/auth";
 import { chooseBundle, chooseNudges } from "@/lib/assignment/engine";
-import { BUNDLE_A, GLOBAL_ASSIGNMENT_SALT } from "@/lib/constants";
+import {
+  BUNDLE_A,
+  DEFAULT_NUDGES_PER_SESSION,
+  GLOBAL_ASSIGNMENT_SALT
+} from "@/lib/constants";
 import { getServiceClient } from "@/lib/db/server";
 import { hashToFloat } from "@/lib/hash";
 import type { NudgeRow } from "@/types/db";
@@ -150,7 +154,11 @@ export async function POST(request: Request) {
     ]);
   const evaluatorSessionCountNumber = evaluatorSessionCount ?? 0;
 
-  if (nudgeError || !allNudges || allNudges.length < 3) {
+  if (
+    nudgeError ||
+    !allNudges ||
+    allNudges.length < DEFAULT_NUDGES_PER_SESSION
+  ) {
     return NextResponse.json(
       { error: "Not enough active nudges to create a session." },
       { status: 400 }

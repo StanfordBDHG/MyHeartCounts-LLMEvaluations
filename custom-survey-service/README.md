@@ -11,7 +11,7 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
 ## What this implements
 
 - Evaluator login via email + evaluator ID verification
-- Fixed session size of **3 nudges**
+- Fixed session size of **4 nudges**
 - Two fixed, mutually exclusive question bundles:
   - `bundle_a`: context inclusion + appropriateness
   - `bundle_b`: coherence + motivation + actionability

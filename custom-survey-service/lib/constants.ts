@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-export const DEFAULT_NUDGES_PER_SESSION = 3;
+export const DEFAULT_NUDGES_PER_SESSION = 4;
 
 export const BUNDLE_A = "bundle_a";
 export const BUNDLE_B = "bundle_b";

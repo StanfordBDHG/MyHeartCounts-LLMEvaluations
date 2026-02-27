@@ -15,7 +15,7 @@ export default function HomePage() {
         <h1>MyHeartCounts Nudge Evaluation</h1>
         <p>
           Log in with your lab email and evaluator ID to start a session. Each
-          session presents 3 nudges and one fixed question bundle.
+          session presents 4 nudges and one fixed question bundle.
         </p>
         <Link href="/login" className="button">
           Go to login
