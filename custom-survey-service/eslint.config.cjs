@@ -27,6 +27,7 @@ module.exports = [
     files: ["next-env.d.ts"],
     rules: {
       "import/extensions": "off",
+      "import/no-unresolved": "off",
     },
   },
 ];
