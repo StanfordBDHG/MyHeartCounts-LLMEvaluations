@@ -9,24 +9,24 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/db/server";
 
-function toCsvValue(input: string | number | null): string {
+const toCsvValue = (input: string | number | null): string => {
   if (input === null) {
     return "";
   }
-  const text = String(input).replaceAll("\"", "\"\"");
+  const text = String(input).replaceAll('"', '""');
   return `"${text}"`;
-}
+};
 
-export async function GET() {
+export const GET = async () => {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("responses")
     .select(
-      "created_at, session_id, evaluator_id, question_id, nudge_id, score_int, optional_comment"
+      "created_at, session_id, evaluator_id, question_id, nudge_id, score_int, optional_comment",
     )
     .order("created_at", { ascending: true });
 
-  if (error || !data) {
+  if (error) {
     return NextResponse.json({ error: "Export failed." }, { status: 500 });
   }
 
@@ -37,7 +37,7 @@ export async function GET() {
     "question_id",
     "nudge_id",
     "score_int",
-    "optional_comment"
+    "optional_comment",
   ];
 
   const rows = data.map((row) =>
@@ -48,10 +48,10 @@ export async function GET() {
       row.question_id,
       row.nudge_id,
       row.score_int,
-      row.optional_comment
+      row.optional_comment,
     ]
       .map(toCsvValue)
-      .join(",")
+      .join(","),
   );
 
   const csv = `${headers.join(",")}\n${rows.join("\n")}\n`;
@@ -60,7 +60,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": "attachment; filename=responses_export.csv"
-    }
+      "Content-Disposition": "attachment; filename=responses_export.csv",
+    },
   });
-}
+};

@@ -13,7 +13,7 @@ export type Axis =
   | "motivation"
   | "actionability";
 
-export type QuestionRow = {
+export interface QuestionRow {
   id: string;
   axis: Axis;
   prompt_text: string;
@@ -21,20 +21,20 @@ export type QuestionRow = {
   scale_min: number | null;
   scale_max: number | null;
   active: boolean;
-};
+}
 
-export type NudgeRow = {
+export interface NudgeRow {
   id: string;
   title: string;
   body: string;
   source_model: string | null;
   metadata_json: Record<string, unknown>;
   active: boolean;
-};
+}
 
-export type EvaluatorRow = {
+export interface EvaluatorRow {
   id: string;
   email: string;
   evaluator_code_hash: string;
   active: boolean;
-};
+}

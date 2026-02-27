@@ -6,8 +6,27 @@
 // SPDX-License-Identifier: MIT
 //
 
-/* eslint-disable @typescript-eslint/no-require-imports */
-const nextCoreWebVitals = require('eslint-config-next/core-web-vitals')
-const nextTypescript = require('eslint-config-next/typescript')
+const nextPlugin = require("@next/eslint-plugin-next");
+const {
+  getEslintNodeConfig,
+} = require("@stanfordspezi/spezi-web-configurations");
 
-module.exports = [...nextCoreWebVitals, ...nextTypescript]
+module.exports = [
+  ...getEslintNodeConfig({ tsconfigRootDir: __dirname }),
+  {
+    files: ["**/*.{js,mjs,cjs,jsx,ts,tsx}"],
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+  },
+  {
+    files: ["next-env.d.ts"],
+    rules: {
+      "import/extensions": "off",
+    },
+  },
+];

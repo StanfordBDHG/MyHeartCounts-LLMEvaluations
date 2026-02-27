@@ -11,11 +11,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MyHeartCounts Survey Service",
-  description: "Custom evaluator survey for motivational nudges"
+  description: "Custom evaluator survey for motivational nudges",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">

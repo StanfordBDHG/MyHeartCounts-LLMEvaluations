@@ -8,17 +8,17 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parse } from "csv-parse/sync";
-import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
+import { parse } from "csv-parse/sync";
 
-type EvaluatorCsvRow = {
+interface EvaluatorCsvRow {
   email?: string;
   evaluator_id?: string;
   active?: string;
-};
+}
 
-async function main() {
+const main = async () => {
   const filePath = process.argv[2];
   if (!filePath) {
     throw new Error("Usage: npm run import:evaluators -- <csv-file-path>");
@@ -31,9 +31,16 @@ async function main() {
   }
 
   const csv = await fs.readFile(path.resolve(filePath), "utf-8");
-  const rows = parse(csv, { columns: true, skip_empty_lines: true }) as EvaluatorCsvRow[];
+  const rows: EvaluatorCsvRow[] = parse(csv, {
+    columns: true,
+    skip_empty_lines: true,
+  });
 
-  const upserts = [];
+  const upserts: Array<{
+    email: string;
+    evaluator_code_hash: string;
+    active: boolean;
+  }> = [];
   for (const row of rows) {
     const email = row.email?.trim().toLowerCase();
     const evaluatorId = row.evaluator_id?.trim();
@@ -43,12 +50,12 @@ async function main() {
     upserts.push({
       email,
       evaluator_code_hash: await bcrypt.hash(evaluatorId, 10),
-      active: row.active?.trim().toLowerCase() !== "false"
+      active: row.active?.trim().toLowerCase() !== "false",
     });
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { persistSession: false }
+    auth: { persistSession: false },
   });
 
   const { error } = await supabase
@@ -59,7 +66,7 @@ async function main() {
   }
 
   console.log(`Imported ${upserts.length} evaluators.`);
-}
+};
 
 void main().catch((error: unknown) => {
   console.error(error);

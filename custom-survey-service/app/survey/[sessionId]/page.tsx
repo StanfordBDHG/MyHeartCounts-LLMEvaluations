@@ -8,34 +8,34 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-type Nudge = {
+interface Nudge {
   id: string;
   title: string;
   body: string;
   metadata_json: Record<string, unknown>;
   position_index: number;
-};
+}
 
-type Question = {
+interface Question {
   id: string;
   stable_key: string;
   prompt_text: string;
   body_markdown: string;
   response_type: "likert_1_7" | "yes_no";
   position_index: number;
-};
+}
 
-type SessionPayload = {
+interface SessionPayload {
   sessionId: string;
   evaluatorId: string;
   bundle: { id: string; name: string };
   nudges: Nudge[];
   questions: Question[];
-};
+}
 
 type ScoreMap = Record<string, number>;
 type MetadataField =
@@ -47,10 +47,10 @@ type MetadataField =
   | "language"
   | "preferred_notification_time";
 
-type MetadataDisplayRow = {
+interface MetadataDisplayRow {
   label: string;
   value: string;
-};
+}
 
 const STAGE_OF_CHANGE_DESCRIPTION_BY_KEY: Record<string, string> = {
   precontemplation:
@@ -62,34 +62,34 @@ const STAGE_OF_CHANGE_DESCRIPTION_BY_KEY: Record<string, string> = {
   action:
     "This person is in the action stage of exercise change. This person has recently started exercising (within the last six months) and is building a new, healthy routine.",
   maintenance:
-    "This person is in the maintenance stage of exercise change. This person has maintained their exercise routine for more than six months and wants to sustain that change by avoiding relapses to previous stages."
+    "This person is in the maintenance stage of exercise change. This person has maintained their exercise routine for more than six months and wants to sustain that change by avoiding relapses to previous stages.",
 };
 
-function keyFor(questionId: string, nudgeId: string): string {
-  return `${questionId}:${nudgeId}`;
-}
+const keyFor = (questionId: string, nudgeId: string): string =>
+  `${questionId}:${nudgeId}`;
 
-function isOptionalQuestion(question: Question): boolean {
-  return question.stable_key === "ap_general";
-}
+const isOptionalQuestion = (question: Question): boolean =>
+  question.stable_key === "ap_general";
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
-}
 
-function readPromptMetadata(nudge: Nudge): Record<string, unknown> {
+const readPromptMetadata = (nudge: Nudge): Record<string, unknown> => {
   const topLevel = asRecord(nudge.metadata_json) ?? {};
   const nested = asRecord(topLevel.prompt_metadata);
   return nested ?? topLevel;
-}
+};
 
-function fieldForQuestion(stableKey: string): MetadataField | null {
+const fieldForQuestion = (stableKey: string): MetadataField | null => {
   if (stableKey.endsWith("gender")) {
     return "gender";
   }
-  if (stableKey.includes("comorbidity") || stableKey.includes("comorbidities")) {
+  if (
+    stableKey.includes("comorbidity") ||
+    stableKey.includes("comorbidities")
+  ) {
     return "comorbidities";
   }
   if (stableKey.endsWith("age")) {
@@ -108,9 +108,9 @@ function fieldForQuestion(stableKey: string): MetadataField | null {
     return "preferred_notification_time";
   }
   return null;
-}
+};
 
-function labelForField(field: MetadataField): string {
+const labelForField = (field: MetadataField): string => {
   switch (field) {
     case "gender":
       return "Gender";
@@ -127,18 +127,23 @@ function labelForField(field: MetadataField): string {
     case "preferred_notification_time":
       return "Preferred notification time";
   }
-}
+};
 
-function stageDescriptionForValue(rawStage: string): string | null {
-  const key = rawStage.trim().toLowerCase().replace(/[^a-z]/g, "");
+const stageDescriptionForValue = (rawStage: string): string | null => {
+  const key = rawStage
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
   return STAGE_OF_CHANGE_DESCRIPTION_BY_KEY[key] ?? null;
-}
+};
 
-function displayPromptText(promptText: string): string {
-  return promptText.replace(/^\s*\[[^\]]+\]\s*/u, "").trim();
-}
+const displayPromptText = (promptText: string): string =>
+  promptText.replace(/^\s*\[[^\]]+\]\s*/u, "").trim();
 
-function metadataForQuestion(question: Question, nudge: Nudge): MetadataDisplayRow[] {
+const metadataForQuestion = (
+  question: Question,
+  nudge: Nudge,
+): MetadataDisplayRow[] => {
   const field = fieldForQuestion(question.stable_key);
   if (!field) {
     return [];
@@ -160,15 +165,15 @@ function metadataForQuestion(question: Question, nudge: Nudge): MetadataDisplayR
     if (description) {
       rows.push({
         label: "Stage description",
-        value: description
+        value: description,
       });
     }
   }
   return rows;
-}
+};
 
 export default function SurveyPage({
-  params
+  params,
 }: {
   params: Promise<{ sessionId: string }>;
 }) {
@@ -181,7 +186,7 @@ export default function SurveyPage({
 
   useEffect(() => {
     let mounted = true;
-    params.then(({ sessionId: routeSessionId }) => {
+    void params.then(({ sessionId: routeSessionId }) => {
       if (mounted) {
         setSessionId(routeSessionId);
       }
@@ -196,7 +201,7 @@ export default function SurveyPage({
       return;
     }
 
-    async function loadSession() {
+    const loadSession = async () => {
       const response = await fetch(`/api/sessions/${sessionId}`);
       if (!response.ok) {
         setError("Could not load this session.");
@@ -204,7 +209,7 @@ export default function SurveyPage({
       }
       const payload = (await response.json()) as SessionPayload;
       setSession(payload);
-    }
+    };
 
     void loadSession();
   }, [sessionId]);
@@ -213,7 +218,10 @@ export default function SurveyPage({
     if (!session) {
       return 0;
     }
-    return session.questions.filter((question) => !isOptionalQuestion(question)).length * session.nudges.length;
+    return (
+      session.questions.filter((question) => !isOptionalQuestion(question))
+        .length * session.nudges.length
+    );
   }, [session]);
 
   const answeredRequiredCount = useMemo(() => {
@@ -234,7 +242,7 @@ export default function SurveyPage({
     return count;
   }, [scores, session]);
 
-  async function submit() {
+  const submit = async () => {
     if (!session) {
       return;
     }
@@ -246,12 +254,12 @@ export default function SurveyPage({
           questionId: question.id,
           nudgeId: nudge.id,
           score: scores[keyFor(question.id, nudge.id)],
-          optional: isOptionalQuestion(question)
-        }))
+          optional: isOptionalQuestion(question),
+        })),
       );
 
       const missingRequired = responses.some(
-        (entry) => !entry.optional && typeof entry.score !== "number"
+        (entry) => !entry.optional && typeof entry.score !== "number",
       );
       if (missingRequired) {
         throw new Error("Please score all required cells in the matrix.");
@@ -262,7 +270,7 @@ export default function SurveyPage({
         .map((entry) => ({
           questionId: entry.questionId,
           nudgeId: entry.nudgeId,
-          score: entry.score as number
+          score: entry.score,
         }));
 
       const response = await fetch("/api/responses/bulk", {
@@ -271,8 +279,8 @@ export default function SurveyPage({
         body: JSON.stringify({
           sessionId: session.sessionId,
           evaluatorId: session.evaluatorId,
-          responses: responsePayload
-        })
+          responses: responsePayload,
+        }),
       });
 
       if (!response.ok) {
@@ -282,12 +290,14 @@ export default function SurveyPage({
       router.push("/login");
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : "Unexpected error."
+        requestError instanceof Error
+          ? requestError.message
+          : "Unexpected error.",
       );
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   if (!session) {
     return (
@@ -330,7 +340,9 @@ export default function SurveyPage({
                 <th>Nudge</th>
                 {question.response_type === "yes_no"
                   ? ["No", "Yes"].map((label) => <th key={label}>{label}</th>)
-                  : [1, 2, 3, 4, 5, 6, 7].map((score) => <th key={score}>{score}</th>)}
+                  : [1, 2, 3, 4, 5, 6, 7].map((score) => (
+                      <th key={score}>{score}</th>
+                    ))}
               </tr>
             </thead>
             <tbody>
@@ -341,37 +353,47 @@ export default function SurveyPage({
                     <div>{nudge.body}</div>
                     <div className="nudge-metadata">
                       {metadataForQuestion(question, nudge).map((entry) => (
-                        <span key={`${question.id}:${nudge.id}:${entry.label}`} className="metadata-pill">
+                        <span
+                          key={`${question.id}:${nudge.id}:${entry.label}`}
+                          className="metadata-pill"
+                        >
                           {entry.label}: {entry.value}
                         </span>
                       ))}
                     </div>
                   </td>
-                  {(question.response_type === "yes_no" ? [1, 7] : [1, 2, 3, 4, 5, 6, 7]).map(
-                    (scoreValue) => {
+                  {(question.response_type === "yes_no"
+                    ? [1, 7]
+                    : [1, 2, 3, 4, 5, 6, 7]
+                  ).map((scoreValue) => {
                     const inputId = `score-${question.id}-${nudge.id}-${scoreValue}`;
 
                     return (
-                    <td key={scoreValue} className="matrix-score-cell">
-                      <label htmlFor={inputId} className="matrix-score-hit-area">
-                        <input
-                          id={inputId}
-                          className="matrix-score-radio"
-                          type="radio"
-                          name={keyFor(question.id, nudge.id)}
-                          checked={scores[keyFor(question.id, nudge.id)] === scoreValue}
-                          onChange={() =>
-                            setScores((current) => ({
-                              ...current,
-                              [keyFor(question.id, nudge.id)]: scoreValue
-                            }))
-                          }
-                        />
-                      </label>
-                    </td>
+                      <td key={scoreValue} className="matrix-score-cell">
+                        <label
+                          htmlFor={inputId}
+                          className="matrix-score-hit-area"
+                        >
+                          <input
+                            id={inputId}
+                            className="matrix-score-radio"
+                            type="radio"
+                            name={keyFor(question.id, nudge.id)}
+                            checked={
+                              scores[keyFor(question.id, nudge.id)] ===
+                              scoreValue
+                            }
+                            onChange={() =>
+                              setScores((current) => ({
+                                ...current,
+                                [keyFor(question.id, nudge.id)]: scoreValue,
+                              }))
+                            }
+                          />
+                        </label>
+                      </td>
                     );
-                    }
-                  )}
+                  })}
                 </tr>
               ))}
             </tbody>

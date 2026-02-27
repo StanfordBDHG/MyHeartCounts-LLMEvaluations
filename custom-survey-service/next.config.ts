@@ -6,17 +6,19 @@
 // SPDX-License-Identifier: MIT
 //
 
-import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { NextConfig } from "next";
 
 const configDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   turbopack: {
-    root: configDirectory
-  }
+    root: configDirectory,
+  },
 };
 
+// Next.js expects a default export from next.config.ts.
+// eslint-disable-next-line import/no-default-export
 export default nextConfig;

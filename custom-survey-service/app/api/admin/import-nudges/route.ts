@@ -15,18 +15,21 @@ const nudgeSchema = z.object({
   title: z.string().min(1),
   body: z.string().min(1),
   sourceModel: z.string().optional(),
-  metadataJson: z.record(z.string(), z.unknown()).optional()
+  metadataJson: z.record(z.string(), z.unknown()).optional(),
 });
 
 const bodySchema = z.object({
-  nudges: z.array(nudgeSchema).min(1)
+  nudges: z.array(nudgeSchema).min(1),
 });
 
-export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
+export const POST = async (request: Request) => {
+  const body: unknown = await request.json().catch(() => null);
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
   }
 
   const supabase = getServiceClient();
@@ -34,17 +37,17 @@ export async function POST(request: Request) {
     const metadataJson = nudge.metadataJson ?? {};
     return {
       dedupe_key: stableHash(
-        `${nudge.title.trim()}::${nudge.body.trim()}::${nudge.sourceModel ?? ""}::${JSON.stringify(metadataJson)}`
+        `${nudge.title.trim()}::${nudge.body.trim()}::${nudge.sourceModel ?? ""}::${JSON.stringify(metadataJson)}`,
       ),
       title: nudge.title.trim(),
       body: nudge.body.trim(),
       source_model: nudge.sourceModel ?? null,
-      metadata_json: metadataJson
+      metadata_json: metadataJson,
     };
   });
 
   const { error } = await supabase.from("nudges").upsert(rows, {
-    onConflict: "dedupe_key"
+    onConflict: "dedupe_key",
   });
 
   if (error) {
@@ -52,4 +55,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ imported: rows.length });
-}
+};

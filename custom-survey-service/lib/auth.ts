@@ -10,10 +10,10 @@ import bcrypt from "bcryptjs";
 import { getServiceClient } from "@/lib/db/server";
 import type { EvaluatorRow } from "@/types/db";
 
-export async function verifyEvaluatorCredentials(
+export const verifyEvaluatorCredentials = async (
   email: string,
-  evaluatorId: string
-): Promise<EvaluatorRow | null> {
+  evaluatorId: string,
+): Promise<EvaluatorRow | null> => {
   const supabase = getServiceClient();
 
   const { data, error } = await supabase
@@ -27,10 +27,14 @@ export async function verifyEvaluatorCredentials(
     return null;
   }
 
-  const isMatch = await bcrypt.compare(evaluatorId, data.evaluator_code_hash);
+  const evaluator = data as EvaluatorRow;
+  const isMatch = await bcrypt.compare(
+    evaluatorId,
+    evaluator.evaluator_code_hash,
+  );
   if (!isMatch) {
     return null;
   }
 
-  return data as EvaluatorRow;
-}
+  return evaluator;
+};

@@ -8,12 +8,12 @@
 
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-type CreateSessionResponse = {
+interface CreateSessionResponse {
   sessionId: string;
-};
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
@@ -31,7 +31,7 @@ export default function LoginPage() {
       const verifyResponse = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, evaluatorId })
+        body: JSON.stringify({ email, evaluatorId }),
       });
 
       if (!verifyResponse.ok) {
@@ -41,7 +41,7 @@ export default function LoginPage() {
       const sessionResponse = await fetch("/api/sessions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, evaluatorId })
+        body: JSON.stringify({ email, evaluatorId }),
       });
 
       if (!sessionResponse.ok) {
@@ -52,12 +52,14 @@ export default function LoginPage() {
       router.push(`/survey/${payload.sessionId}`);
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : "Unexpected error."
+        requestError instanceof Error
+          ? requestError.message
+          : "Unexpected error.",
       );
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   return (
     <main>
