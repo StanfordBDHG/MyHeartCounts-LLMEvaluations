@@ -8,11 +8,14 @@ create extension if not exists pgcrypto;
 
 create table if not exists evaluators (
   id uuid primary key default gen_random_uuid(),
-  email text not null unique,
+  email text not null,
   evaluator_code_hash text not null,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+create unique index if not exists evaluators_email_lower_key
+on evaluators (lower(email));
 
 create table if not exists nudges (
   id uuid primary key default gen_random_uuid(),

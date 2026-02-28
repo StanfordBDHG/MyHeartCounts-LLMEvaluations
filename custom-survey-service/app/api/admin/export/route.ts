@@ -81,6 +81,9 @@ export const GET = async (request: Request) => {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": "attachment; filename=responses_export.csv",
+      "Cache-Control": "no-store, max-age=0",
+      Pragma: "no-cache",
+      Expires: "0",
     },
   });
 };
