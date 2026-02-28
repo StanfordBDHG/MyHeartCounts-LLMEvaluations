@@ -287,7 +287,7 @@ export default function SurveyPage({
         throw new Error("Submission failed.");
       }
 
-      router.push("/login");
+      router.push("/survey/confirmation");
     } catch (requestError) {
       setError(
         requestError instanceof Error
