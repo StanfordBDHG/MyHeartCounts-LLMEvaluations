@@ -13,7 +13,7 @@ import { verifyEvaluatorCredentials } from "@/lib/auth";
 import {
   BUNDLE_A,
   DEFAULT_NUDGES_PER_SESSION,
-  GLOBAL_ASSIGNMENT_SALT,
+  getAssignmentSalt,
 } from "@/lib/constants";
 import { getServiceClient } from "@/lib/db/server";
 import { hashToFloat } from "@/lib/hash";
@@ -60,6 +60,7 @@ const orderQuestionsForSession = (args: {
   evaluatorSessionCount: number;
   questions: QuestionRow[];
 }): QuestionRow[] => {
+  const assignmentSalt = getAssignmentSalt();
   const tieBreak = (leftKey: string, rightKey: string): number =>
     leftKey.localeCompare(rightKey);
 
@@ -94,7 +95,7 @@ const orderQuestionsForSession = (args: {
       .map((group) => ({
         group,
         rank: deterministicRank(
-          `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:pair:${group[0].stable_key}`,
+          `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:pair:${group[0].stable_key}`,
         ),
       }))
       .sort((left, right) => {
@@ -115,7 +116,7 @@ const orderQuestionsForSession = (args: {
       .map((question) => ({
         question,
         rank: deterministicRank(
-          `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:question:${question.stable_key}`,
+          `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:question:${question.stable_key}`,
         ),
       }))
       .sort((left, right) => {
@@ -136,7 +137,7 @@ const orderQuestionsForSession = (args: {
     .map((question) => ({
       question,
       rank: deterministicRank(
-        `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:question:${question.stable_key}`,
+        `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:question:${question.stable_key}`,
       ),
     }))
     .sort((left, right) => {

@@ -15,7 +15,7 @@ This is an overview of what can be tested:
 - **genderIdentity**: 'male', 'female'
 - **ageGroup**: '<35', '35-50', '51-65', '>65'
 - **disease**: null, 'Heart failure', 'Pulmonary arterial hypertension', 'Diabetes', 'ACHD (simple)', 'ACHD (complex)'
-- **stateOfChange**: null, 'Precontemplation', 'Contemplation', 'Preparation', 'Action', 'Maintenance'
+- **stageOfChange**: null, 'Precontemplation', 'Contemplation', 'Preparation', 'Action', 'Maintenance'
 - **educationLevel**: 'Highschool', 'college', 'collage'
 - **language**: 'en', 'es'
 - **preferredWorkoutTypes**: 'run,walk', 'HIIT,strength', 'swim,bicycle', 'yoga/pilates,walk', 'sport,run,strength', 'other', 'other,walk,run', 'other,HIIT,walk,swim,run,sport,strength,bicycle,yoga/pilates'
@@ -132,7 +132,7 @@ The script supports the following CLI arguments:
   - `securegpt` - Only SecureGPT models (GPT-5, Gemini 2.5 Pro, etc.)
   - `all` - All available models (default if provider is specified)
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
-- `--require-stage-of-change` - Only generate/test permutations where `stateOfChange` is provided (non-null)
+- `--require-stage-of-change` - Only generate/test permutations where `stageOfChange` is provided (non-null)
 - `--require-comorbidity` - Only generate/test permutations where a disease/comorbidity is provided (non-null)
 - `--timeout <seconds>` - Override default generation timeout (default: 60s)
 
@@ -207,7 +207,7 @@ The CSV output includes the following columns:
 - `genderIdentity` - The gender identity value used
 - `ageGroup` - The age group tested
 - `disease` - The disease condition (empty if null)
-- `stateOfChange` - The stage of change (empty if null)
+- `stageOfChange` - The stage of change (empty if null)
 - `educationLevel` - The education level
 - `language` - The language ('en' or 'es')
 - `preferredNotificationTime` - The preferred notification time

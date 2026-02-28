@@ -199,7 +199,7 @@ set body_markdown = $$**Scoring Guidance:** Please evaluate the nudge for clinic
 - **1 (Strongly Disagree):** Severe Violation. Suggests life-threatening activities or shows total disregard for medical context.$$ where stable_key = 'ap_comorbidity';
 
 update questions
-set body_markdown = $$**Scoring Guidance: ** Please evaluate the nudge for misalignments with the Transtheoretical Model. Use a score of **3 or lower** if the tone or call-to-action is psychologically mismatched; below are some examples:
+set body_markdown = $$**Scoring Guidance:** Please evaluate the nudge for misalignments with the Transtheoretical Model. Use a score of **3 or lower** if the tone or call-to-action is psychologically mismatched; below are some examples:
 - **Progressive Overreach:** Demanding "Action" from someone in "Pre-contemplation" (e.g., "Join a gym today!").
 - **Under-motivation:** Providing basic "Contemplation" facts to someone already in "Maintenance." 
 - **Mismatched Tone:** Being overly aggressive with someone who has only "begun taking small steps" in the Preparation stage.

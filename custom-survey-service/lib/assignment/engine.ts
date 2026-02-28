@@ -12,7 +12,7 @@ import {
   BUNDLE_B,
   BUNDLE_B_NAME,
   DEFAULT_NUDGES_PER_SESSION,
-  GLOBAL_ASSIGNMENT_SALT,
+  getAssignmentSalt,
 } from "@/lib/constants";
 import { hashToFloat, stableHash } from "@/lib/hash";
 import type { NudgeRow } from "@/types/db";
@@ -39,6 +39,7 @@ export const chooseBundle = (args: {
   evaluatorSessionCount: number;
   bundleCounts: BundleCountRow[];
 }): BundleChoice => {
+  const assignmentSalt = getAssignmentSalt();
   const countA =
     args.bundleCounts.find((x) => x.bundle_id === BUNDLE_A)?.count ?? 0;
   const countB =
@@ -52,10 +53,10 @@ export const chooseBundle = (args: {
   }
 
   const tieA = deterministicScore(
-    `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:${BUNDLE_A}`,
+    `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:${BUNDLE_A}`,
   );
   const tieB = deterministicScore(
-    `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:${BUNDLE_B}`,
+    `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:${BUNDLE_B}`,
   );
 
   return tieA <= tieB
@@ -71,6 +72,7 @@ export const chooseNudges = (args: {
   previouslySeenNudgeIds: Set<string>;
   n?: number;
 }): NudgeRow[] => {
+  const assignmentSalt = getAssignmentSalt();
   const nudgeCount = args.n ?? DEFAULT_NUDGES_PER_SESSION;
   const exposureMap = new Map(
     args.globalExposureCounts.map((row) => [row.nudge_id, row.count]),
@@ -86,10 +88,10 @@ export const chooseNudges = (args: {
       }
 
       const leftTie = deterministicScore(
-        `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:${left.id}`,
+        `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:${left.id}`,
       );
       const rightTie = deterministicScore(
-        `${args.evaluatorId}:${args.evaluatorSessionCount}:${GLOBAL_ASSIGNMENT_SALT}:${right.id}`,
+        `${args.evaluatorId}:${args.evaluatorSessionCount}:${assignmentSalt}:${right.id}`,
       );
 
       if (leftTie !== rightTie) {

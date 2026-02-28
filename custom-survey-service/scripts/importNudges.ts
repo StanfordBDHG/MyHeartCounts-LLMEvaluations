@@ -17,7 +17,7 @@ interface CsvRow {
   genderIdentity?: string;
   ageGroup?: string;
   disease?: string;
-  stateOfChange?: string;
+  stageOfChange?: string;
   educationLevel?: string;
   language?: string;
   preferredNotificationTime?: string;
@@ -61,7 +61,7 @@ const buildMetadataJson = (row: CsvRow): Record<string, unknown> => {
     gender: normalizeText(row.genderIdentity),
     age_group: normalizeText(row.ageGroup),
     comorbidities: normalizeText(row.disease),
-    stage_of_change: normalizeText(row.stateOfChange),
+    stage_of_change: normalizeText(row.stageOfChange),
     education_level: normalizeText(row.educationLevel),
     language: normalizeText(row.language),
     preferred_notification_time: normalizeText(row.preferredNotificationTime),
