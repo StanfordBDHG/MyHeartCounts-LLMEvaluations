@@ -76,15 +76,8 @@ export const chooseNudges = (args: {
     args.globalExposureCounts.map((row) => [row.nudge_id, row.count]),
   );
 
-  const unseenFirst = args.allNudges.filter(
-    (nudge) => !args.previouslySeenNudgeIds.has(nudge.id),
-  );
-  const candidatePool =
-    unseenFirst.length >= nudgeCount ? unseenFirst : args.allNudges.slice();
-
-  return candidatePool
-    .slice()
-    .sort((left, right) => {
+  const sortPool = (pool: NudgeRow[]): NudgeRow[] =>
+    pool.slice().sort((left, right) => {
       const leftCount = exposureMap.get(left.id) ?? 0;
       const rightCount = exposureMap.get(right.id) ?? 0;
 
@@ -104,6 +97,14 @@ export const chooseNudges = (args: {
       }
 
       return stableHash(left.id).localeCompare(stableHash(right.id));
-    })
-    .slice(0, nudgeCount);
+    });
+
+  const unseen = args.allNudges.filter(
+    (nudge) => !args.previouslySeenNudgeIds.has(nudge.id),
+  );
+  const seen = args.allNudges.filter((nudge) =>
+    args.previouslySeenNudgeIds.has(nudge.id),
+  );
+
+  return [...sortPool(unseen), ...sortPool(seen)].slice(0, nudgeCount);
 };

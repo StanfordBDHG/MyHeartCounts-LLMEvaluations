@@ -29,7 +29,11 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
    - `npm install`
 2. Copy `.env.example` to `.env.local` and fill values.
 3. Apply SQL migration in `supabase/migrations/20260223_init.sql`.
-4. Start dev server:
+4. Seed at least one evaluator into the `evaluators` table before login works in a fresh environment:
+   - Create a CSV (for example `supabase/seed_evaluators.csv`) with headers `email,evaluator_id,active` and at least one row.
+   - Run `npm run import:evaluators -- supabase/seed_evaluators.csv` (executes `scripts/importEvaluators.ts`).
+   - Alternative: run your own seed SQL file (for example `supabase/seed_evaluators.sql`) that inserts at least one row into `evaluators`.
+5. Start dev server:
    - `npm run dev`
 
 ## Nudge import

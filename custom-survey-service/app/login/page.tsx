@@ -26,12 +26,17 @@ export default function LoginPage() {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEvaluatorId = evaluatorId.trim();
 
     try {
       const verifyResponse = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, evaluatorId }),
+        body: JSON.stringify({
+          email: normalizedEmail,
+          evaluatorId: normalizedEvaluatorId,
+        }),
       });
 
       if (!verifyResponse.ok) {
@@ -41,7 +46,10 @@ export default function LoginPage() {
       const sessionResponse = await fetch("/api/sessions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, evaluatorId }),
+        body: JSON.stringify({
+          email: normalizedEmail,
+          evaluatorId: normalizedEvaluatorId,
+        }),
       });
 
       if (!sessionResponse.ok) {

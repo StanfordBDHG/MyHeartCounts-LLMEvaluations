@@ -14,5 +14,18 @@ export const BUNDLE_B = "bundle_b";
 export const BUNDLE_A_NAME = "Context Inclusion + Appropriateness";
 export const BUNDLE_B_NAME = "Coherence + Motivation + Actionability";
 
-export const GLOBAL_ASSIGNMENT_SALT =
-  process.env.ASSIGNMENT_SALT ?? "change-me-in-production";
+export const GLOBAL_ASSIGNMENT_SALT = (() => {
+  const salt = process.env.ASSIGNMENT_SALT;
+  if (salt) {
+    return salt;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Missing required environment variable: ASSIGNMENT_SALT");
+  }
+
+  console.warn(
+    "[constants] ASSIGNMENT_SALT not set; using insecure default for non-production.",
+  );
+  return "change-me-in-production";
+})();

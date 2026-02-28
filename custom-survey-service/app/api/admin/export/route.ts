@@ -17,7 +17,27 @@ const toCsvValue = (input: string | number | null): string => {
   return `"${text}"`;
 };
 
-export const GET = async () => {
+const readAdminTokenFromHeaders = (request: Request): string | null => {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader) {
+    const [scheme, ...rest] = authHeader.trim().split(/\s+/);
+    if (scheme.toLowerCase() === "bearer" && rest.length > 0) {
+      return rest.join(" ");
+    }
+    return authHeader.trim();
+  }
+
+  return request.headers.get("x-admin-token");
+};
+
+export const GET = async (request: Request) => {
+  const expectedToken = process.env.ADMIN_EXPORT_TOKEN;
+  const providedToken = readAdminTokenFromHeaders(request);
+
+  if (!expectedToken || !providedToken || providedToken !== expectedToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("responses")
