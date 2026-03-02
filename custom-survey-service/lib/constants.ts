@@ -1,0 +1,39 @@
+//
+// This source file is part of the Stanford Biodesign Digital Health MyHeart Counts open-source project based on the Stanford Spezi Template Application project
+//
+// SPDX-FileCopyrightText: 2025-2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+//
+// SPDX-License-Identifier: MIT
+//
+
+export const DEFAULT_NUDGES_PER_SESSION = 4;
+
+export const BUNDLE_A = "bundle_a";
+export const BUNDLE_B = "bundle_b";
+
+export const BUNDLE_A_NAME = "Context Inclusion + Appropriateness";
+export const BUNDLE_B_NAME = "Coherence + Motivation + Actionability";
+
+let cachedAssignmentSalt: string | null = null;
+
+export const getAssignmentSalt = (): string => {
+  if (cachedAssignmentSalt) {
+    return cachedAssignmentSalt;
+  }
+
+  const salt = process.env.ASSIGNMENT_SALT;
+  if (salt) {
+    cachedAssignmentSalt = salt;
+    return cachedAssignmentSalt;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Missing required environment variable: ASSIGNMENT_SALT");
+  }
+
+  console.warn(
+    "[constants] ASSIGNMENT_SALT not set; using insecure default for non-production.",
+  );
+  cachedAssignmentSalt = "change-me-in-production";
+  return cachedAssignmentSalt;
+};

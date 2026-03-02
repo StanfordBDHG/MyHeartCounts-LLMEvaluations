@@ -41,7 +41,7 @@ interface TestContext {
   genderIdentity: string;
   ageGroup: string;
   disease: Disease | null;
-  stateOfChange: StageOfChange | null;
+  stageOfChange: StageOfChange | null;
   educationLevel: EducationLevel;
   language: string;
   preferredWorkoutTypes: string;
@@ -119,10 +119,10 @@ class NudgePermutationTester {
     }
   }
 
-  private getStageContext(stateOfChange: StageOfChange | null): string {
-    if (!stateOfChange) return "";
+  private getStageContext(stageOfChange: StageOfChange | null): string {
+    if (!stageOfChange) return "";
 
-    switch (stateOfChange) {
+    switch (stageOfChange) {
       case StageOfChange.PRECONTEMPLATION:
         return "This person is in the pre-contemplation stage of exercise change. This person does not plan to start exercising in the next six months and does not consider their current behavior a problem.";
       case StageOfChange.CONTEMPLATION:
@@ -220,7 +220,7 @@ class NudgePermutationTester {
     const genderContext = this.getGenderContext(context.genderIdentity);
     const ageContext = this.getAgeContext(context.ageGroup);
     const diseaseContext = this.getDiseaseContext(context.disease);
-    const stageContext = this.getStageContext(context.stateOfChange);
+    const stageContext = this.getStageContext(context.stageOfChange);
     const educationContext = this.getEducationContext(context.educationLevel);
     const languageContext = this.getLanguageContext(context.language);
     const activityTypeContext = this.getActivityTypeContext(
@@ -318,7 +318,7 @@ class NudgePermutationTester {
     for (const genderIdentity of genderOptions) {
       for (const ageGroup of ageOptions) {
         for (const disease of diseaseOptions) {
-          for (const stateOfChange of stageOptions) {
+          for (const stageOfChange of stageOptions) {
             for (const educationLevel of educationOptions) {
               for (const language of languageOptions) {
                 for (const preferredWorkoutTypes of workoutTypeOptions) {
@@ -327,7 +327,7 @@ class NudgePermutationTester {
                       genderIdentity,
                       ageGroup,
                       disease: disease as Disease | null,
-                      stateOfChange: stateOfChange as StageOfChange | null,
+                      stageOfChange: stageOfChange as StageOfChange | null,
                       educationLevel: educationLevel as EducationLevel,
                       language,
                       preferredWorkoutTypes,
@@ -372,7 +372,7 @@ class NudgePermutationTester {
       "genderIdentity",
       "ageGroup",
       "disease",
-      "stateOfChange",
+      "stageOfChange",
       "educationLevel",
       "language",
       "preferredNotificationTime",
@@ -399,7 +399,7 @@ class NudgePermutationTester {
         result.context.genderIdentity,
         result.context.ageGroup,
         result.context.disease ?? "",
-        result.context.stateOfChange ?? "",
+        result.context.stageOfChange ?? "",
         result.context.educationLevel,
         result.context.language,
         result.context.preferredNotificationTime,

@@ -149,3 +149,6 @@ __pycache__/
 
 # CSV files
 *.csv
+
+# Generated and evaluated data files
+data/
