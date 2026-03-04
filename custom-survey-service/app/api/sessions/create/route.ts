@@ -22,6 +22,8 @@ import type { NudgeRow } from "@/types/db";
 const bodySchema = z.object({
   email: z.email(),
   evaluatorId: z.string().min(3),
+  firstName: z.string().trim().optional(),
+  lastName: z.string().trim().optional(),
 });
 
 interface QuestionRow {
@@ -162,6 +164,8 @@ export const POST = async (request: Request) => {
   const evaluator = await verifyEvaluatorCredentials(
     parsed.data.email,
     parsed.data.evaluatorId,
+    parsed.data.firstName,
+    parsed.data.lastName,
   );
   if (!evaluator) {
     return NextResponse.json(
