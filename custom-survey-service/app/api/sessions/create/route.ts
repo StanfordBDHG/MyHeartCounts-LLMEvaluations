@@ -183,7 +183,8 @@ export const POST = async (request: Request) => {
     supabase
       .from("sessions")
       .select("id", { count: "exact", head: true })
-      .eq("evaluator_id", evaluator.id),
+      .eq("evaluator_id", evaluator.id)
+      .not("completed_at", "is", null),
     supabase
       .from("nudges")
       .select("id, title, body, source_model, metadata_json, active")
@@ -204,12 +205,19 @@ export const POST = async (request: Request) => {
     { data: globalNudgeRows },
     { data: seenNudges },
   ] = await Promise.all([
-    supabase.from("session_bundle").select("bundle_id"),
-    supabase.from("session_nudges").select("nudge_id"),
+    supabase
+      .from("session_bundle")
+      .select("bundle_id, sessions!inner(id)")
+      .not("sessions.completed_at", "is", null),
     supabase
       .from("session_nudges")
-      .select("nudge_id")
-      .eq("evaluator_id", evaluator.id),
+      .select("nudge_id, sessions!inner(id)")
+      .not("sessions.completed_at", "is", null),
+    supabase
+      .from("session_nudges")
+      .select("nudge_id, sessions!inner(id)")
+      .eq("evaluator_id", evaluator.id)
+      .not("sessions.completed_at", "is", null),
   ]);
 
   const bundleRowsData = (bundleRows ?? []) as SessionBundleRow[];
