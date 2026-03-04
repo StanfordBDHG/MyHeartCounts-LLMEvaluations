@@ -11,7 +11,6 @@ import { getServiceClient } from "@/lib/db/server";
 import type { EvaluatorRow } from "@/types/db";
 
 const STANFORD_DOMAIN = "@stanford.edu";
-const DEFAULT_STANFORD_SHARED_PASSWORD = "fearthetree";
 
 const normalizeWhitespace = (value: string): string =>
   value.trim().replace(/\s+/g, " ");
@@ -19,9 +18,9 @@ const normalizeWhitespace = (value: string): string =>
 const isStanfordAffiliateEmail = (email: string): boolean =>
   email.toLowerCase().trim().endsWith(STANFORD_DOMAIN);
 
-const getStanfordSharedPassword = (): string =>
-  process.env.STANFORD_AFFILIATE_PASSWORD?.trim() ??
-  DEFAULT_STANFORD_SHARED_PASSWORD;
+const getStanfordSharedPassword = (): string | null => {
+  return process.env.STANFORD_AFFILIATE_PASSWORD?.trim() ?? null;
+};
 
 const upsertStanfordAffiliate = async (args: {
   email: string;
@@ -69,7 +68,11 @@ const upsertStanfordAffiliate = async (args: {
     };
   }
 
-  const sharedPasswordHash = await bcrypt.hash(getStanfordSharedPassword(), 10);
+  const sharedPassword = getStanfordSharedPassword();
+  if (!sharedPassword) {
+    return null;
+  }
+  const sharedPasswordHash = await bcrypt.hash(sharedPassword, 10);
   const { data: inserted, error: insertError } = await supabase
     .from("evaluators")
     .insert({
@@ -109,14 +112,19 @@ export const verifyEvaluatorCredentials = async (
   const supabase = getServiceClient();
   const normalizedEmail = email.toLowerCase().trim();
   const normalizedEvaluatorId = evaluatorId.trim();
+  const stanfordEmail = isStanfordAffiliateEmail(normalizedEmail);
 
-  if (isStanfordAffiliateEmail(normalizedEmail)) {
+  if (stanfordEmail) {
+    const sharedPassword = getStanfordSharedPassword();
+    if (!sharedPassword) {
+      return null;
+    }
     const normalizedFirstName = firstName ? normalizeWhitespace(firstName) : "";
     const normalizedLastName = lastName ? normalizeWhitespace(lastName) : "";
     if (!normalizedFirstName || !normalizedLastName) {
       return null;
     }
-    if (normalizedEvaluatorId !== getStanfordSharedPassword()) {
+    if (normalizedEvaluatorId !== sharedPassword) {
       return null;
     }
 

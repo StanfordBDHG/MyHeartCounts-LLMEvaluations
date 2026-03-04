@@ -29,7 +29,7 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
 1. Install dependencies:
    - `npm install`
 2. Copy `.env.example` to `.env.local` and fill values.
-   - Optional: set `STANFORD_AFFILIATE_PASSWORD` (defaults to `fearthetree`).
+   - Set `STANFORD_AFFILIATE_PASSWORD` for Stanford affiliate login.
 3. Apply SQL migrations in `supabase/migrations/`.
 4. Seed at least one evaluator into the `evaluators` table before login works in a fresh environment:
    - Create a CSV (for example `supabase/seed_evaluators.csv`) with headers `email,evaluator_id,active` and at least one row.
