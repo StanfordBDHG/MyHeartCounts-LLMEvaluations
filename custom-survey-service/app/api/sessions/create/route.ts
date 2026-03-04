@@ -222,14 +222,17 @@ export const POST = async (request: Request) => {
 
   if (bundleRowsError || globalNudgeRowsError || seenNudgesError) {
     return NextResponse.json(
-      { error: "Failed to resolve session bundle, global nudge count, or seen/unseen nudge data." },
+      {
+        error:
+          "Failed to resolve session bundle, global nudge count, or seen/unseen nudge data.",
+      },
       { status: 500 },
     );
   }
 
-  const bundleRowsData = (bundleRows ?? []) as SessionBundleRow[];
-  const globalNudgeRowsData = (globalNudgeRows ?? []) as SessionNudgeRow[];
-  const seenNudgeRowsData = (seenNudges ?? []) as SessionNudgeRow[];
+  const bundleRowsData = bundleRows as SessionBundleRow[];
+  const globalNudgeRowsData = globalNudgeRows as SessionNudgeRow[];
+  const seenNudgeRowsData = seenNudges as SessionNudgeRow[];
 
   const bundleCountMap = new Map<string, number>();
   for (const row of bundleRowsData) {
