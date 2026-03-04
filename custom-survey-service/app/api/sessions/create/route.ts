@@ -201,9 +201,9 @@ export const POST = async (request: Request) => {
   }
 
   const [
-    { data: bundleRows },
-    { data: globalNudgeRows },
-    { data: seenNudges },
+    { data: bundleRows, error: bundleRowsError },
+    { data: globalNudgeRows, error: globalNudgeRowsError },
+    { data: seenNudges, error: seenNudgesError },
   ] = await Promise.all([
     supabase
       .from("session_bundle")
@@ -219,6 +219,13 @@ export const POST = async (request: Request) => {
       .eq("evaluator_id", evaluator.id)
       .not("sessions.completed_at", "is", null),
   ]);
+
+  if (bundleRowsError || globalNudgeRowsError || seenNudgesError) {
+    return NextResponse.json(
+      { error: "Failed to resolve session bundle, global nudge count, or seen/unseen nudge data." },
+      { status: 500 },
+    );
+  }
 
   const bundleRowsData = (bundleRows ?? []) as SessionBundleRow[];
   const globalNudgeRowsData = (globalNudgeRows ?? []) as SessionNudgeRow[];
