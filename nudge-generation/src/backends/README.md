@@ -15,7 +15,7 @@ The backend system uses a factory pattern to create appropriate backend instance
 - **ModelBackend** - Interface defining the contract for all backends
 - **BackendFactory** - Factory class that creates backend instances
 - **OpenAIBackend** - Implementation for OpenAI API
-- **MLXPythonBackend** - Implementation for MLX models via Python service
+- **HuggingFacePythonBackend** - Implementation for local models via Python service (MLX + Transformers)
 - **SecureGPTBackend** - Implementation for SecureGPT API (supports OpenAI-style, Gemini, and Llama models)
 
 ## Adding a New Backend
@@ -27,7 +27,7 @@ To add support for a new model provider (e.g., Claude, Gemini):
 Edit `ModelBackend.ts` to add the new provider:
 
 ```typescript
-export type ModelProvider = 'openai' | 'mlx-python' | 'securegpt' | 'claude' | 'gemini' | 'your-new-provider'
+export type ModelProvider = 'openai' | 'huggingface' | 'securegpt' | 'claude' | 'gemini' | 'your-new-provider'
 ```
 
 ### 2. Create Backend Implementation

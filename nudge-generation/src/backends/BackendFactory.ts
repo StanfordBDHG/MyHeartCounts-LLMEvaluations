@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import { MLXPythonBackend } from "./MLXPythonBackend.js";
+import { HuggingFacePythonBackend } from "./HuggingFacePythonBackend.js";
 import { type ModelBackend } from "./ModelBackend.js";
 import { OpenAIBackend } from "./OpenAIBackend.js";
 import { SecureGPTBackend } from "./SecureGPTBackend.js";
@@ -24,8 +24,8 @@ const createBackend = (
         throw new Error("OpenAI API key is required for OpenAI models");
       }
       return new OpenAIBackend(config, openAIApiKey);
-    case "mlx-python":
-      return new MLXPythonBackend(config, pythonServiceUrl);
+    case "huggingface":
+      return new HuggingFacePythonBackend(config, pythonServiceUrl);
     case "securegpt":
       if (!secureGPTApiKey) {
         throw new Error("SecureGPT API key is required for SecureGPT models");

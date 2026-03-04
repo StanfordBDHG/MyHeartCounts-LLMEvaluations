@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT
 
 # Nudge Permutation Testing Script
 
-This script generates all possible permutations of the personalization context used in the `planNudges.ts` function and captures the LLM responses for analysis. It supports multiple model backends including OpenAI API, SecureGPT, and local MLX models via HuggingFace.
+This script generates all possible permutations of the personalization context used in the `planNudges.ts` function and captures the LLM responses for analysis. It supports multiple model backends including OpenAI API, SecureGPT, and local models via a Python service (MLX and non-MLX Hugging Face models).
 
 ## Context Variables Tested
 
@@ -46,9 +46,9 @@ export SECUREGPT_API_KEY="your-securegpt-api-key-here"
 
 **Note:** The machine must be connected to the full Stanford VPN for SecureGPT API to work.
 
-### 3. Setup Python Service (for MLX models)
+### 3. Setup Python Service (for local models)
 
-If you want to test MLX models, you need to set up the Python service:
+If you want to test local models, you need to set up the Python service:
 
 1. **Install Python dependencies:**
    ```bash
@@ -56,7 +56,10 @@ If you want to test MLX models, you need to set up the Python service:
    pip install -r requirements.txt
    ```
 
-2. **Note:** MLX models require Apple Silicon (M1/M2/M3) Mac. The models will be automatically downloaded from Hugging Face on first use.
+2. **Notes:**
+   - MLX models require Apple Silicon (M1/M2/M3) Mac.
+   - Non-MLX Hugging Face models run through `transformers` and use GPU when available (`cuda` or `mps`), otherwise CPU.
+   - Models will be automatically downloaded from Hugging Face on first use.
 
 3. **Start the Python service:**
    ```bash
@@ -66,7 +69,7 @@ If you want to test MLX models, you need to set up the Python service:
    Or manually:
    ```bash
    cd python_service
-   python mlx_service.py
+   python huggingface_service.py
    ```
    
    The service will run on `http://localhost:8000` by default.
@@ -83,16 +86,16 @@ npm run test:sample       # Sample test with 10 permutations
 npm run test:random       # Random sample of 10 permutations
 ```
 
-### Testing MLX Models
+### Testing Local Python Models (MLX + Hugging Face)
 
-To test MLX models, first ensure the Python service is running, then:
+To test local Python models, first ensure the Python service is running, then:
 
 ```bash
-# Test MLX models with sample
-npm run test:mlx
+# Test local Python models with sample
+npm run test:huggingface
 
 # Or manually specify provider
-npm run build && node dist/generateNudgePermutations.js --provider mlx-python --sample 5
+npm run build && node dist/generateNudgePermutations.js --provider huggingface --sample 5
 ```
 
 ### Testing SecureGPT Models
@@ -128,7 +131,7 @@ The script supports the following CLI arguments:
 - `--models <id1,id2,...>` - Test multiple specific models (comma-separated)
 - `--provider <provider-name|all>` - Filter by provider:
   - `openai` - Only OpenAI models
-  - `mlx-python` - Only MLX models
+  - `huggingface` - Local Hugging Face models (MLX + non-MLX) via the Python service
   - `securegpt` - Only SecureGPT models (GPT-5, Gemini 2.5 Pro, etc.)
   - `all` - All available models (default if provider is specified)
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
@@ -142,14 +145,17 @@ The script supports the following CLI arguments:
 # Test specific MLX model with 5 permutations
 npm run build && node dist/generateNudgePermutations.js --model mlx-community/SmolLM2-360M-Instruct --sample 5
 
+# Test MHC-Coach (non-MLX Hugging Face model) with 1 permutation
+npm run build && node dist/generateNudgePermutations.js --model SriyaM/MHC-Coach --sample 1
+
 # Test multiple models
 npm run build && node dist/generateNudgePermutations.js --models "gpt-5.2-2025-12-11,mlx-community/Llama-3.2-1B-Instruct-4bit" --sample 10
 
-# Test all MLX models with random sampling
-npm run build && node dist/generateNudgePermutations.js --provider mlx-python --sample 20 --random
+# Test all HuggingFace models with random sampling
+npm run build && node dist/generateNudgePermutations.js --provider huggingface --sample 20 --random
 
 # Custom Python service URL
-npm run build && node dist/generateNudgePermutations.js --provider mlx-python --python-service-url http://localhost:9000
+npm run build && node dist/generateNudgePermutations.js --provider huggingface --python-service-url http://localhost:9000
 
 # Test SecureGPT GPT-5
 npm run build && node dist/generateNudgePermutations.js --model gpt-5 --sample 5
@@ -172,7 +178,8 @@ npm run build && node dist/generateNudgePermutations.js --provider all --sample 
 - `gpt-5-nano` - SecureGPT GPT-5 Nano
 - `gemini-2.5-pro` - SecureGPT Gemini 2.5 Pro
 
-### MLX Models (15 models available)
+### Local Python Models
+#### MLX Models (15 models available)
 - `mlx-community/Llama-3.2-1B-Instruct-4bit`
 - `mlx-community/Llama-3.2-3B-Instruct-4bit`
 - `mlx-community/Phi-4-mini-instruct-4bit`
@@ -189,6 +196,9 @@ npm run build && node dist/generateNudgePermutations.js --provider all --sample 
 - `mlx-community/SmolLM2-1.7B-Instruct`
 - `mlx-community/SmolLM3-3B-4bit`
 
+#### Non-MLX Hugging Face Models (via Transformers)
+- `SriyaM/MHC-Coach`
+
 ## Output
 
 The script saves results to CSV files with descriptive filenames:
@@ -202,7 +212,7 @@ The script saves results to CSV files with descriptive filenames:
 The CSV output includes the following columns:
 
 - `modelId` - The model identifier used
-- `provider` - The model provider (e.g., 'openai', 'mlx-python')
+- `provider` - The model provider (e.g., 'openai', 'huggingface')
 - `backendType` - The backend type (same as provider)
 - `genderIdentity` - The gender identity value used
 - `ageGroup` - The age group tested
@@ -229,7 +239,7 @@ The script uses a backend abstraction layer that supports multiple model provide
 
 - **OpenAIBackend** - Handles OpenAI API calls
 - **SecureGPTBackend** - Handles SecureGPT API calls
-- **MLXPythonBackend** - Communicates with Python MLX service via HTTP
+- **HuggingFacePythonBackend** - Communicates with Python local model service via HTTP (MLX + Transformers)
 - **BackendFactory** - Creates appropriate backend instances
 
 This architecture makes it easy to add new model providers in the future (e.g., Claude, Gemini).
@@ -249,6 +259,7 @@ If a specific model fails to load:
 - The script will log the error and continue with other models
 - Check the error message in the CSV output
 - For MLX models, ensure you have Apple Silicon Mac and sufficient memory
+- For non-MLX local models, ensure `torch` and `transformers` are installed and you have enough memory/VRAM
 
 ### Timeout Errors
 
@@ -260,6 +271,6 @@ If you encounter timeout errors:
 ## Notes
 
 - Models are tested **sequentially** (one at a time) to avoid resource contention
-- MLX models are loaded **on-demand** in the Python service (not cached)
+- Local Python models are loaded **on-demand** in the Python service (not cached)
 - The script maintains backward compatibility - default behavior uses OpenAI only
-- First request for each MLX model may be slower as the model needs to be downloaded/loaded
+- First request for each local model may be slower as the model needs to be downloaded/loaded
