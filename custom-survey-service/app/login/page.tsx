@@ -19,8 +19,15 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [evaluatorId, setEvaluatorId] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isStanfordAffiliate = email
+    .trim()
+    .toLowerCase()
+    .endsWith("@stanford.edu");
 
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,6 +35,14 @@ export default function LoginPage() {
     setError(null);
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedEvaluatorId = evaluatorId.trim();
+    const normalizedFirstName = firstName.trim();
+    const normalizedLastName = lastName.trim();
+
+    if (isStanfordAffiliate && (!normalizedFirstName || !normalizedLastName)) {
+      setError("Stanford affiliate login requires first and last name.");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const verifyResponse = await fetch("/api/auth/verify-code", {
@@ -36,6 +51,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: normalizedEmail,
           evaluatorId: normalizedEvaluatorId,
+          firstName: normalizedFirstName || undefined,
+          lastName: normalizedLastName || undefined,
         }),
       });
 
@@ -49,6 +66,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: normalizedEmail,
           evaluatorId: normalizedEvaluatorId,
+          firstName: normalizedFirstName || undefined,
+          lastName: normalizedLastName || undefined,
         }),
       });
 
@@ -74,7 +93,7 @@ export default function LoginPage() {
       <div className="card">
         <h1>Evaluator Login</h1>
         <p className="muted">
-          Enter the email and evaluator ID provided by your onboarding team.
+          Enter your credentials to begin an evaluation session.
         </p>
         <form onSubmit={onSubmit}>
           <div style={{ marginBottom: 12 }}>
@@ -89,9 +108,39 @@ export default function LoginPage() {
               />
             </label>
           </div>
+          {isStanfordAffiliate ? (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <label>
+                  First name
+                  <input
+                    className="input"
+                    type="text"
+                    required
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                  />
+                </label>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label>
+                  Last name
+                  <input
+                    className="input"
+                    type="text"
+                    required
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                  />
+                </label>
+              </div>
+            </>
+          ) : null}
           <div style={{ marginBottom: 12 }}>
             <label>
-              Evaluator ID
+              {isStanfordAffiliate
+                ? "Stanford shared password"
+                : "Evaluator ID/Password"}
               <input
                 className="input"
                 type="password"
@@ -100,6 +149,11 @@ export default function LoginPage() {
                 onChange={(event) => setEvaluatorId(event.target.value)}
               />
             </label>
+            <p className="muted">
+              {isStanfordAffiliate
+                ? "Use the Stanford affiliate password shared by the study team."
+                : "Use the evaluator ID/Password provided by your onboarding team."}
+            </p>
           </div>
           {error ? <p className="error">{error}</p> : null}
           <button className="button" type="submit" disabled={submitting}>

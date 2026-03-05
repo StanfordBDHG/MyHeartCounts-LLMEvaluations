@@ -37,4 +37,6 @@ export interface EvaluatorRow {
   email: string;
   evaluator_code_hash: string;
   active: boolean;
+  first_name: string | null;
+  last_name: string | null;
 }

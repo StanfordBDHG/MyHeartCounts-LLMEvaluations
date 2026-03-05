@@ -22,6 +22,8 @@ import type { NudgeRow } from "@/types/db";
 const bodySchema = z.object({
   email: z.email(),
   evaluatorId: z.string().min(3),
+  firstName: z.string().trim().optional(),
+  lastName: z.string().trim().optional(),
 });
 
 interface QuestionRow {
@@ -162,6 +164,8 @@ export const POST = async (request: Request) => {
   const evaluator = await verifyEvaluatorCredentials(
     parsed.data.email,
     parsed.data.evaluatorId,
+    parsed.data.firstName,
+    parsed.data.lastName,
   );
   if (!evaluator) {
     return NextResponse.json(
@@ -179,7 +183,8 @@ export const POST = async (request: Request) => {
     supabase
       .from("sessions")
       .select("id", { count: "exact", head: true })
-      .eq("evaluator_id", evaluator.id),
+      .eq("evaluator_id", evaluator.id)
+      .not("completed_at", "is", null),
     supabase
       .from("nudges")
       .select("id, title, body, source_model, metadata_json, active")
@@ -196,21 +201,38 @@ export const POST = async (request: Request) => {
   }
 
   const [
-    { data: bundleRows },
-    { data: globalNudgeRows },
-    { data: seenNudges },
+    { data: bundleRows, error: bundleRowsError },
+    { data: globalNudgeRows, error: globalNudgeRowsError },
+    { data: seenNudges, error: seenNudgesError },
   ] = await Promise.all([
-    supabase.from("session_bundle").select("bundle_id"),
-    supabase.from("session_nudges").select("nudge_id"),
+    supabase
+      .from("session_bundle")
+      .select("bundle_id, sessions!inner(id)")
+      .not("sessions.completed_at", "is", null),
     supabase
       .from("session_nudges")
-      .select("nudge_id")
-      .eq("evaluator_id", evaluator.id),
+      .select("nudge_id, sessions!inner(id)")
+      .not("sessions.completed_at", "is", null),
+    supabase
+      .from("session_nudges")
+      .select("nudge_id, sessions!inner(id)")
+      .eq("evaluator_id", evaluator.id)
+      .not("sessions.completed_at", "is", null),
   ]);
 
-  const bundleRowsData = (bundleRows ?? []) as SessionBundleRow[];
-  const globalNudgeRowsData = (globalNudgeRows ?? []) as SessionNudgeRow[];
-  const seenNudgeRowsData = (seenNudges ?? []) as SessionNudgeRow[];
+  if (bundleRowsError || globalNudgeRowsError || seenNudgesError) {
+    return NextResponse.json(
+      {
+        error:
+          "Failed to resolve session bundle, global nudge count, or seen/unseen nudge data.",
+      },
+      { status: 500 },
+    );
+  }
+
+  const bundleRowsData = bundleRows as SessionBundleRow[];
+  const globalNudgeRowsData = globalNudgeRows as SessionNudgeRow[];
+  const seenNudgeRowsData = seenNudges as SessionNudgeRow[];
 
   const bundleCountMap = new Map<string, number>();
   for (const row of bundleRowsData) {
