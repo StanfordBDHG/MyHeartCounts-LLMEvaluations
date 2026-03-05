@@ -14,8 +14,10 @@ export default function HomePage() {
       <div className="card">
         <h1>MyHeartCounts Nudge Evaluation</h1>
         <p>
-          Log in with your lab email and evaluator ID to start a session. Each
-          session presents 4 nudges and one fixed question bundle.
+          Log in with your lab email and evaluator ID/password to start a
+          session. If you are a Stanford affiliate, please additionally provide
+          your first and last name to log in. Each session presents 4 nudges and
+          one fixed question bundle.
         </p>
         <Link href="/login" className="button">
           Go to login

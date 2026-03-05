@@ -11,6 +11,7 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
 ## What this implements
 
 - Evaluator login via email + evaluator ID verification
+- Alternate Stanford affiliate login for any `@stanford.edu` email with shared password, plus required first/last name capture
 - Fixed session size of **4 nudges**
 - Two fixed, mutually exclusive question bundles:
   - `bundle_a`: context inclusion + appropriateness
@@ -28,7 +29,8 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
 1. Install dependencies:
    - `npm install`
 2. Copy `.env.example` to `.env.local` and fill values.
-3. Apply SQL migration in `supabase/migrations/20260223_init.sql`.
+   - Set `STANFORD_AFFILIATE_PASSWORD` for Stanford affiliate login.
+3. Apply SQL migrations in `supabase/migrations/`.
 4. Seed at least one evaluator into the `evaluators` table before login works in a fresh environment:
    - Create a CSV (for example `supabase/seed_evaluators.csv`) with headers `email,evaluator_id,active` and at least one row.
    - Run `npm run import:evaluators -- supabase/seed_evaluators.csv` (executes `scripts/importEvaluators.ts`).
