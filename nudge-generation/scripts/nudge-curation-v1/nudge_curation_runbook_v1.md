@@ -31,5 +31,5 @@ python3 scripts/nudge-curation-v1/nudge_curation_script_v1.py --seed 42 --pretty
 Run this from `nudge-generation`:
 
 ```bash
-npm run build && node dist/generateNudgePermutations.js --models "gpt-5,mlx-community/Ministral-3-3B-Instruct-2512-4bit,mlx-community/Qwen2.5-1.5B-Instruct-4bit,mlx-community/Llama-3.2-1B-Instruct-4bit,mlx-community/SmolLM3-3B-4bit" --contexts-json scripts/nudge-curation-v1/patient_contexts_seed42.json
+npm run build && node dist/generateNudgePermutations.js --models "gpt-5,mlx-community/Ministral-3-3B-Instruct-2512-4bit,mlx-community/Qwen2.5-1.5B-Instruct-4bit,mlx-community/Llama-3.2-1B-Instruct-4bit,mlx-community/SmolLM3-3B-4bit" --contexts-json scripts/nudge-curation-v1/patient_contexts_seed42.json --output ../data/generated/nudge-curation-v1
 ```

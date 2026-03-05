@@ -44,6 +44,7 @@ STAGES_OF_CHANGE = [
     "Maintenance",
 ]
 EDUCATION_LEVELS = ["Highschool", "college"]
+ACTIVITY_TYPES = ["HIIT", "walk", "swim", "run", "sport", "strength", "bicycle", "yoga/pilates"]
 NOTIFICATION_TIMES = ["7:00 AM", "12:00 PM", "6:00 PM"]
 
 # Required disease distribution:
@@ -76,6 +77,7 @@ def build_curated_contexts(seed: int) -> list[dict[str, Any]]:
             "educationLevel": rng.choice(EDUCATION_LEVELS),
             "language": "en",
             # Exactly one activity per context for simplicity.
+            "preferredWorkoutTypes": rng.choice(ACTIVITY_TYPES),
             "preferredNotificationTime": rng.choice(NOTIFICATION_TIMES),
         }
         context["fullPrompt"] = build_prompt(context)
