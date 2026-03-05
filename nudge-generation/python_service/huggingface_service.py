@@ -9,7 +9,6 @@ SPDX-License-Identifier: MIT
 from typing import Any, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
-from mlx_lm import load, generate
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -133,6 +132,7 @@ async def generate_text(request: GenerateRequest):
     try:
         model_name = request.model_id
         if model_name.startswith("mlx-community/"):
+            from mlx_lm import load, generate
             model, tokenizer, *_ = load(model_name)
 
             # Format prompt with chat template
