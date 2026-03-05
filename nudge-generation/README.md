@@ -135,6 +135,7 @@ The script supports the following CLI arguments:
   - `securegpt` - Only SecureGPT models (GPT-5, Gemini 2.5 Pro, etc.)
   - `all` - All available models (default if provider is specified)
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
+- `--output <dir>` - Write results CSV to a custom output directory (the script still auto-generates the filename inside this directory)
 - `--require-stage-of-change` - Only generate/test permutations where `stageOfChange` is provided (non-null)
 - `--require-comorbidity` - Only generate/test permutations where a disease/comorbidity is provided (non-null)
 - `--contexts-json <path>` - Load explicit patient contexts from a JSON array (uses provided contexts instead of generated permutations/sample mode)
@@ -166,6 +167,9 @@ npm run build && node dist/generateNudgePermutations.js --provider huggingface -
 
 # Custom Python service URL
 npm run build && node dist/generateNudgePermutations.js --provider huggingface --python-service-url http://localhost:9000
+
+# Write output CSV to a custom directory
+npm run build && node dist/generateNudgePermutations.js --provider all --sample 10 --output ./data/custom-results
 
 # Test SecureGPT GPT-5
 npm run build && node dist/generateNudgePermutations.js --model gpt-5 --sample 5
@@ -214,7 +218,7 @@ npm run build && node dist/generateNudgePermutations.js --provider all --context
 
 ## Output
 
-The script saves results to CSV files with descriptive filenames:
+The script saves results to CSV files with descriptive filenames. By default it writes to `data/generated`; use `--output <dir>` to override the directory.
 
 - `nudge_permutations_results_<model-ids>_sample_<number>.csv` - Sample results
 - `nudge_permutations_results_<model-ids>_sample_<number>_random.csv` - Random sample results
