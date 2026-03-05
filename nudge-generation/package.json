@@ -12,12 +12,12 @@
     "test": "npm run build && node dist/generateNudgePermutations.js",
     "test:sample": "npm run build && node dist/generateNudgePermutations.js --sample 10",
     "test:random": "npm run build && node dist/generateNudgePermutations.js --sample 10 --random",
-    "test:mlx": "npm run build && node dist/generateNudgePermutations.js --provider mlx-python --sample 1",
+    "test:huggingface": "npm run build && node dist/generateNudgePermutations.js --provider huggingface --sample 1",
     "test:securegpt": "npm run build && node dist/generateNudgePermutations.js --provider securegpt --sample 1",
     "test:openai": "npm run build && node dist/generateNudgePermutations.js --provider openai --sample 1",
     "test:all": "npm run build && node dist/generateNudgePermutations.js --provider all --sample 1",
     "test:ci": "npm run build && node dist/generateNudgePermutations.js --model llama4-maverick --sample 1",
-    "start:python-service": "cd python_service && python -m uvicorn mlx_service:app --reload"
+    "start:python-service": "cd python_service && python -m uvicorn huggingface_service:app --reload"
   },
   "dependencies": {
     "openai": "^4.20.0"

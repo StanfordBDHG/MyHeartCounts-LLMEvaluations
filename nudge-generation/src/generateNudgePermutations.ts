@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { BackendFactory } from "./backends/BackendFactory.js";
-import { MLXPythonBackend } from "./backends/MLXPythonBackend.js";
+import { HuggingFacePythonBackend } from "./backends/HuggingFacePythonBackend.js";
 import { type ModelBackend } from "./backends/ModelBackend.js";
 import { MODEL_CONFIGS, type ModelConfig } from "./config/models.js";
 
@@ -433,10 +433,10 @@ class NudgePermutationTester {
 
   async checkPythonServiceHealth(): Promise<boolean> {
     try {
-      const testBackend = new MLXPythonBackend(
+      const testBackend = new HuggingFacePythonBackend(
         {
           id: "test",
-          provider: "mlx-python",
+          provider: "huggingface",
           displayName: "test",
           enabled: true,
         },
@@ -465,22 +465,22 @@ class NudgePermutationTester {
       );
     }
 
-    // Check Python service health if MLX models are being tested
-    const hasMLXModels = this.modelsToTest.some(
-      (m) => m.provider === "mlx-python",
+    // Check Python service health if Hugging Face provider models are being tested
+    const hasHuggingFaceModels = this.modelsToTest.some(
+      (m) => m.provider === "huggingface",
     );
-    if (hasMLXModels) {
+    if (hasHuggingFaceModels) {
       const isHealthy = await this.checkPythonServiceHealth();
       if (!isHealthy) {
         console.warn(
-          `Warning: Python service at ${this.pythonServiceUrl} is not available. MLX models will be skipped.`,
+          `Warning: Python service at ${this.pythonServiceUrl} is not available. Hugging Face provider models will be skipped.`,
         );
         this.modelsToTest = this.modelsToTest.filter(
-          (m) => m.provider !== "mlx-python",
+          (m) => m.provider !== "huggingface",
         );
         if (this.modelsToTest.length === 0) {
           throw new Error(
-            "No models available for testing. Python service is required for MLX models.",
+            "No models available for testing. Python service is required for huggingface-provider models.",
           );
         }
       }

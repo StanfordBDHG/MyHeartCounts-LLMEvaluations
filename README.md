@@ -17,7 +17,7 @@ The study itself with its contents is defined in [StanfordBDHG/MyHeartCounts-Stu
 
 ## Nudge Generation
 
-See [nudge-generation/README.md](./nudge-generation/README.md) for documentation on nudge generation via various language models (GPT, Gemini, local MLX models, etc.).
+See [nudge-generation/README.md](./nudge-generation/README.md) for documentation on nudge generation via various language models (GPT, Gemini, local HuggingFace models, etc.).
 
 ### Contributing
 

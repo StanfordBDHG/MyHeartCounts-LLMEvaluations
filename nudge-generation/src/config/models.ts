@@ -39,7 +39,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   // MLX models
   {
     id: "mlx-community/Llama-3.2-1B-Instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Llama 3.2 1B Instruct 4bit",
     quantization: "4bit",
     size: "1B",
@@ -50,7 +50,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Llama-3.2-3B-Instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Llama 3.2 3B Instruct 4bit",
     quantization: "4bit",
     size: "3B",
@@ -61,7 +61,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Phi-4-mini-instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Phi-4 Mini Instruct 4bit",
     quantization: "4bit",
     size: "1B",
@@ -72,7 +72,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/gemma-3-270m-it-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Gemma 3 270M IT 4bit",
     quantization: "4bit",
     size: "270M",
@@ -83,7 +83,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/gemma-3-1b-it-qat-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Gemma 3 1B IT QAT 4bit",
     quantization: "qat-4bit",
     size: "1B",
@@ -94,7 +94,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/gemma-3-4b-it-qat-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Gemma 3 4B IT QAT 4bit",
     quantization: "qat-4bit",
     size: "4B",
@@ -105,7 +105,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Qwen2.5 0.5B Instruct 4bit",
     quantization: "4bit",
     size: "0.5B",
@@ -116,7 +116,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Qwen2.5 1.5B Instruct 4bit",
     quantization: "4bit",
     size: "1.5B",
@@ -127,7 +127,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Qwen2.5-3B-Instruct-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Qwen2.5 3B Instruct 4bit",
     quantization: "4bit",
     size: "3B",
@@ -138,7 +138,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Qwen3-4B-Instruct-2507-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Qwen3 4B Instruct 4bit",
     quantization: "4bit",
     size: "4B",
@@ -149,7 +149,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/DeepSeek-R1-Distill-Qwen-1.5B-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "DeepSeek R1 Distill Qwen 1.5B 4bit",
     quantization: "4bit",
     size: "1.5B",
@@ -160,7 +160,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/Ministral-3-3B-Instruct-2512-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "Ministral 3 3B Instruct 4bit",
     quantization: "4bit",
     size: "3B",
@@ -171,7 +171,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/SmolLM2-360M-Instruct",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "SmolLM2 360M Instruct",
     size: "360M",
     enabled: true,
@@ -181,7 +181,7 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/SmolLM2-1.7B-Instruct",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "SmolLM2 1.7B Instruct",
     size: "1.7B",
     enabled: true,
@@ -191,13 +191,23 @@ export const MODEL_CONFIGS: ModelConfig[] = [
   },
   {
     id: "mlx-community/SmolLM3-3B-4bit",
-    provider: "mlx-python",
+    provider: "huggingface",
     displayName: "SmolLM3 3B 4bit",
     quantization: "4bit",
     size: "3B",
     enabled: true,
     config: {
       timeout: 120,
+    },
+  },
+  {
+    id: "SriyaM/MHC-Coach",
+    provider: "huggingface",
+    displayName: "MHC-Coach",
+    size: "70B",
+    enabled: true,
+    config: {
+      timeout: 300,
     },
   },
   // SecureGPT models

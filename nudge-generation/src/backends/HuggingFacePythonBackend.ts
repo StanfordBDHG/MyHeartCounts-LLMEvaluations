@@ -15,9 +15,9 @@ interface PythonServiceResponse {
   error?: string;
 }
 
-export class MLXPythonBackend implements ModelBackend {
+export class HuggingFacePythonBackend implements ModelBackend {
   readonly modelId: string;
-  readonly provider = "mlx-python" as const;
+  readonly provider = "huggingface" as const;
   private serviceUrl: string;
 
   constructor(config: ModelConfig, serviceUrl?: string) {
@@ -53,7 +53,7 @@ export class MLXPythonBackend implements ModelBackend {
       const data = (await response.json()) as PythonServiceResponse;
 
       if (data.error) {
-        throw new Error(`MLX model error: ${data.error}`);
+        throw new Error(`Hugging Face model error: ${data.error}`);
       }
 
       let extracted = data.response;

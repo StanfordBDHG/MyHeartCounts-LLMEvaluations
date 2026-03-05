@@ -4,9 +4,11 @@ SPDX-FileCopyrightText: 2025-2026 Stanford University and the project authors (s
 SPDX-License-Identifier: MIT
 -->
 
-# MLX Python Service
+# Local Model Python Service
 
-This service provides an HTTP API for running MLX models locally using the `mlx-lm` library.
+This service provides an HTTP API for running local models:
+- MLX models (`mlx-community/*`) via `mlx-lm`
+- Non-MLX Hugging Face models via `transformers` + `torch`
 
 ## Setup
 
@@ -15,7 +17,9 @@ This service provides an HTTP API for running MLX models locally using the `mlx-
    pip install -r requirements.txt
    ```
 
-2. Ensure you have Apple Silicon (M1/M2/M3) Mac - MLX models require Apple Silicon
+2. Notes:
+   - MLX models require Apple Silicon (M1/M2/M3) Mac.
+   - Non-MLX Hugging Face models will use GPU when available (`cuda` or `mps`) and CPU otherwise.
 
 3. Models will be automatically downloaded from Hugging Face on first use
 
@@ -23,12 +27,12 @@ This service provides an HTTP API for running MLX models locally using the `mlx-
 
 Start the service:
 ```bash
-python mlx_service.py
+python huggingface_service.py
 ```
 
 Or using uvicorn directly:
 ```bash
-uvicorn mlx_service:app --reload
+uvicorn huggingface_service:app --reload
 ```
 
 The service will run on `http://localhost:8000` by default.
@@ -67,7 +71,8 @@ Content-Type: application/json
 
 ## Supported Models
 
-All models from the `mlx-community` organization on Hugging Face are supported.
+- All models from the `mlx-community` organization on Hugging Face are supported (MLX path).
+- Additional non-MLX Hugging Face models are supported through `transformers` (for example, `SriyaM/MHC-Coach`).
 
 Special handling is implemented for:
 - `mlx-community/SmolLM3-3B-4bit` - requires system message with "/no_think" content
@@ -76,5 +81,5 @@ Special handling is implemented for:
 
 - Models are loaded on-demand for each request (not cached in memory)
 - First request for each model may be slower as the model needs to be downloaded/loaded
-- The service uses chat templates automatically for proper prompt formatting
+- The service uses chat templates automatically when supported by the tokenizer
 
