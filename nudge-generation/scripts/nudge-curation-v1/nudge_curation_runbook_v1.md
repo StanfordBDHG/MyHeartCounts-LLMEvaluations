@@ -15,7 +15,7 @@ The generator creates exactly 7 contexts using deterministic seeding. Disease cu
 Prompt text and context snippets are loaded from the shared spec at `config/prompts/prompt_constants.v1.json` so Python and TypeScript stay in sync.
 
 ```bash
-python3 scripts/nudge-curation-v1/nudge_curation_script_v1.py --seed 42 --pretty --output scripts/nudge-curation-v1/patient_contexts_seed42.json
+python3 scripts/nudge-curation-v1/patient_context_curation_script_v1.py --seed 42 --pretty --output scripts/nudge-curation-v1/patient_contexts_seed42.json
 ```
 
 ## 2) Models Selected for Evaluation
