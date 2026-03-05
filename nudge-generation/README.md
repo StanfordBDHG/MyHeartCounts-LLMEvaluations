@@ -137,7 +137,17 @@ The script supports the following CLI arguments:
 - `--python-service-url <url>` - Override Python service URL (default: http://localhost:8000)
 - `--require-stage-of-change` - Only generate/test permutations where `stageOfChange` is provided (non-null)
 - `--require-comorbidity` - Only generate/test permutations where a disease/comorbidity is provided (non-null)
+- `--contexts-json <path>` - Load explicit patient contexts from a JSON array (uses provided contexts instead of generated permutations/sample mode)
 - `--timeout <seconds>` - Override default generation timeout (default: 60s)
+
+### Shared Prompt Constants
+
+Prompt-generation instruction text and context snippets are now centralized in:
+
+- `config/prompts/prompt_constants.v1.json`
+- `config/prompts/prompt_constants.schema.json`
+
+Both the TypeScript generator (`src/generateNudgePermutations.ts`) and Python curation script (`scripts/nudge-curation-v1/nudge_curation_script_v1.py`) load this same prompt specification to avoid string drift.
 
 ### Examples
 
@@ -165,6 +175,9 @@ npm run build && node dist/generateNudgePermutations.js --model gemini-2.5-pro -
 
 # Require stage of change and comorbidity in all tested permutations
 npm run build && node dist/generateNudgePermutations.js --provider all --sample 10 --require-stage-of-change --require-comorbidity
+
+# Use curated contexts from JSON (bypasses --sample/--random generation)
+npm run build && node dist/generateNudgePermutations.js --provider all --contexts-json scripts/nudge-curation-v1/patient_contexts_seed42.json
 ```
 
 ## Available Models
