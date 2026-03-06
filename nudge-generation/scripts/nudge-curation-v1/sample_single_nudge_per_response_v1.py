@@ -17,15 +17,6 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_INPUT_CSV = (
-    Path(__file__).resolve().parents[3]
-    / "data"
-    / "generated"
-    / "nudge-curation-v1"
-    / "nudge_permutations_results_multi-provider_5models_from-json.csv"
-)
-
-
 CONTEXT_COLUMNS = [
     "modelId",
     "provider",
@@ -58,8 +49,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input",
         type=Path,
-        default=DEFAULT_INPUT_CSV,
-        help=f"Input CSV path (default: {DEFAULT_INPUT_CSV}).",
+        required=True,
+        help="Input CSV path.",
     )
     parser.add_argument(
         "--output",

@@ -33,3 +33,11 @@ Run this from `nudge-generation`:
 ```bash
 npm run build && node dist/generateNudgePermutations.js --models "gpt-5,mlx-community/Ministral-3-3B-Instruct-2512-4bit,mlx-community/Qwen2.5-1.5B-Instruct-4bit,mlx-community/Llama-3.2-1B-Instruct-4bit,mlx-community/SmolLM3-3B-4bit" --contexts-json scripts/nudge-curation-v1/patient_contexts_seed42.json --output ../data/generated/nudge-curation-v1
 ```
+
+## 4) Deterministically Sample One Nudge per Model Response
+
+Run this from `nudge-generation`:
+
+```bash
+python3 scripts/nudge-curation-v1/sample_single_nudge_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_multi-provider_6models_from-json.csv
+```
