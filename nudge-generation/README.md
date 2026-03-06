@@ -148,7 +148,7 @@ Prompt-generation instruction text and context snippets are now centralized in:
 - `config/prompts/prompt_constants.v1.json`
 - `config/prompts/prompt_constants.schema.json`
 
-Both the TypeScript generator (`src/generateNudgePermutations.ts`) and Python curation script (`scripts/nudge-curation-v1/nudge_curation_script_v1.py`) load this same prompt specification to avoid string drift.
+Both the TypeScript generator (`src/generateNudgePermutations.ts`) and Python curation script (`scripts/nudge-curation-v1/patient_context_curation_script_v1.py`) load this same prompt specification to avoid string drift.
 
 ### Examples
 
