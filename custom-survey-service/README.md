@@ -44,9 +44,10 @@ Import a single generated CSV file:
 
 - `npm run import:nudges -- ../nudge-generation/dist/nudge_permutations_results_gpt-5_sample_2.csv`
 
-The script supports both `llmResponse` formats currently found in this repo:
+The script reads from either `llmResponse` (generation output) or `sampledNudgeJson` (single-sampled output), and supports these JSON formats:
 - direct array of `{title, body}`
 - wrapped object `{ "nudges": [{title, body}] }`
+- single object `{ "title": "...", "body": "..." }`
 
 It also stores prompt metadata from CSV columns in `nudges.metadata_json` (for example `gender`, `comorbidities`, and `preferred_notification_time`) so evaluator UI can show context for matching question types.
 

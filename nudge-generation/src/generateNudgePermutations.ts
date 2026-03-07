@@ -13,6 +13,12 @@ import { BackendFactory } from "./backends/BackendFactory.js";
 import { HuggingFacePythonBackend } from "./backends/HuggingFacePythonBackend.js";
 import { type ModelBackend } from "./backends/ModelBackend.js";
 import { MODEL_CONFIGS, type ModelConfig } from "./config/models.js";
+import {
+  buildPrompt,
+  getContextSnippet,
+  loadPromptConstants,
+  renderTemplate,
+} from "./config/promptConstantsLoader.js";
 
 // Type definitions matching planNudges.ts
 enum Disease {
@@ -67,6 +73,17 @@ interface TestResult {
   error?: string;
 }
 
+const REQUIRED_CONTEXT_KEYS: Array<keyof TestContext> = [
+  "genderIdentity",
+  "ageGroup",
+  "disease",
+  "stageOfChange",
+  "educationLevel",
+  "language",
+  "preferredWorkoutTypes",
+  "preferredNotificationTime",
+];
+
 class NudgePermutationTester {
   private results: TestResult[] = [];
   private modelsToTest: ModelConfig[] = [];
@@ -76,86 +93,6 @@ class NudgePermutationTester {
     private pythonServiceUrl = "http://localhost:8000",
     private secureGPTApiKey?: string | undefined,
   ) {}
-
-  private getAgeContext(ageGroup: string): string {
-    switch (ageGroup) {
-      case "<35":
-        return "This participant is 28 years old and should be prompted to think about the short-term benefits of exercise on their mood, energy, and health.";
-      case "35-50":
-        return "This participant is 42 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chromic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about inproving quality of life through exercise.";
-      case "51-65":
-        return "This participant is 58 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chromic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about inproving quality of life through exercise. At this age, they should also be thinking about adding elements of weight bearing exercise into their routines, to promote bone health and prevent fractures that could lead to rapid clinical decline as they age.";
-      case ">65":
-        return "This participant is 72 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chromic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about inproving quality of life through exercise. At this age, they should also be thinking about adding elements of weight bearing exercise into their routines, to promote bone health and prevent fractures that could lead to rapid clinical decline as they age. Finally, they should be considering lower impact sports and activities (e.g., walks and hikes instead of runs).";
-      default:
-        return "";
-    }
-  }
-
-  private getGenderContext(genderIdentity: string): string {
-    if (genderIdentity === "male") {
-      return "This participant is male.";
-    } else {
-      return "This participant is female.";
-    }
-  }
-
-  private getDiseaseContext(disease: Disease | null): string {
-    if (!disease) return "";
-
-    switch (disease) {
-      case Disease.HEART_FAILURE:
-        return "This participant has heart failure, a condition characterized by low cardiac output leading to impaired physical fitness. Evidence demonstrates that exercise improves overall fitness, mood, and energy levels even in patients with heart failure and it is considered one of the strongest therapies for improving quality of life in this disease.";
-      case Disease.PULMONARY_ARTERIAL_HYPERTENSION:
-        return "This participant has pulmonary arterial hypertension (PAH), a condition characterized by high blood pressure in the arteries of the lungs, which makes the right side of the heart work harder to pump blood. PAH is a progressive disease that increases the risk of heart failure, reduced physical capacity, and early mortality. While it cannot be cured, treatments and lifestyle strategies such as regular physical activity can improve exercise tolerance, heart function, and overall quality of life.";
-      case Disease.DIABETES:
-        return "This participant has diabetes, a condition that is characterized by high glucose levels and insulin resistance. Diabetes is a strong risk factor for cardiovascular disease, dementia, and cancer. Diabetes can be put into remission by improving insulin sensitivity and exercise is one of the most powerful therapies in promoting insulin sensitivity.";
-      case Disease.ACHD_SIMPLE:
-        return "This participant has a biventricular circulation and low- to moderate-complexity congenital heart disease (e.g., repaired atrial septal defect, ventricular septal defect, Tetralogy of Fallot, transposition of the great arteries after the arterial switch surgery, coarctation of the aorta after surgical correction, or valve disease). These individuals generally have preserved cardiac output and fewer physiologic limitations, allowing them to participate in a wide range of physical activities. Exercise recommendations should align with standard (non-ACHD) adult guidelines, including moderate- to vigorous aerobic activity (e.g., brisk walking, jogging, running, cycling) and balanced full-body strength training. Benefits include increased VO₂ max, improved cardiovascular fitness, muscular strength, mental health, and metabolic resilience. Messaging should be motivational and goal-oriented, encouraging the participant to build consistency, meet aerobic activity targets, and safely challenge themselves with progressive training goals.";
-      case Disease.ACHD_COMPLEX:
-        return "This participant has complex congenital heart disease physiology, including single ventricle circulation (Fontan) or a systemic right ventricle (congenitally corrected transposition of the great arteries or transposition of the great arteries after the Mustard or Senning surgery). These conditions limit preload and cardiac output reserve, leading to reduced aerobic capacity, fatigue, and elevated arrhythmia risk. Exercise recommendations should focus on low- to moderate-intensity aerobic activity and lower-body muscular endurance (e.g., walking, light jogging, light cycling, bodyweight leg exercises). Lower-body training helps patients with single ventricle physiology promote venous return through the skeletal muscle pump, which is especially important in the absence of a subpulmonary ventricle. Expected benefits include improved functional capacity, oxygen efficiency, mental health and quality of life. Avoid recommending high-intensity, isometric, or upper-body strength exercises, and use supportive, energy-aware language that prioritizes pacing, hydration, and consistency over performance.";
-      default:
-        return "";
-    }
-  }
-
-  private getStageContext(stageOfChange: StageOfChange | null): string {
-    if (!stageOfChange) return "";
-
-    switch (stageOfChange) {
-      case StageOfChange.PRECONTEMPLATION:
-        return "This person is in the pre-contemplation stage of exercise change. This person does not plan to start exercising in the next six months and does not consider their current behavior a problem.";
-      case StageOfChange.CONTEMPLATION:
-        return "This person is in the contemplation stage of changing their exercise. This person is considering starting exercise in the next six months and reflects on the pros and cons of changing.";
-      case StageOfChange.PREPARATION:
-        return "This person is in the preparation stage of changing their exercise habits. This person is ready to begin exercising in the next 30 days and has begun taking small steps.";
-      case StageOfChange.ACTION:
-        return "This person is in the action stage of exercise change. This person has recently started exercising (within the last six months) and is building a new, healthy routine.";
-      case StageOfChange.MAINTENANCE:
-        return "This person is in the maintenance stage of exercise change. This person has maintained their exercise routine for more than six months and wants to sustain that change by avoiding relapses to previous stages. New activities should be avoided. Be as neutral as possible with the generated nudge.";
-      default:
-        return "";
-    }
-  }
-
-  private getEducationContext(educationLevel: EducationLevel): string {
-    switch (educationLevel) {
-      case EducationLevel.HIGHSCHOOL:
-        return "This person's highest level of education is high school or lower. Write in clear, natural language appropriate for a person with a sixth-grade reading level.";
-      case EducationLevel.COLLEGE:
-      case EducationLevel.COLLAGE:
-        return "This person is more highly educated and has some form of higher education. Please write the prompts at the 12th grade reading comprehension level.";
-      default:
-        return "";
-    }
-  }
-
-  private getLanguageContext(language: string): string {
-    if (language === "es") {
-      return "This person's primary language is Spanish. Provide the prompt in Spanish in Latin American Spanish in the formal tone. You should follow RAE guidelines for proper Spanish use in the LATAM.";
-    }
-    return "";
-  }
 
   private getActivityTypeContext(preferredWorkoutTypes: string): string {
     // Available workout types, edit here if needed down the line
@@ -206,31 +143,51 @@ class NudgePermutationTester {
     return activityTypeContext;
   }
 
-  private getNotificationTimeContext(
-    preferredNotificationTime: string,
-  ): string {
-    return `This user prefers to receive recommendation at ${preferredNotificationTime}. Tailor the prompt to match the typical context of that time of day and suggest realistic opportunities for activity they could do the same day they recieve the prompt, even if it is late evening. For instance, if the time is in the morning, encourage early activity or planning for later (e.g., lunch or after work). Avoid irrelevant examples that do not fit the selected time of day.`;
-  }
-
   private async generateNudgesForContext(
     context: TestContext,
     backend: ModelBackend,
     modelConfig: ModelConfig,
   ): Promise<TestResult> {
-    const genderContext = this.getGenderContext(context.genderIdentity);
-    const ageContext = this.getAgeContext(context.ageGroup);
-    const diseaseContext = this.getDiseaseContext(context.disease);
-    const stageContext = this.getStageContext(context.stageOfChange);
-    const educationContext = this.getEducationContext(context.educationLevel);
-    const languageContext = this.getLanguageContext(context.language);
+    const promptConstants = loadPromptConstants();
+    const genderContext = getContextSnippet(
+      promptConstants,
+      "genderIdentity",
+      context.genderIdentity,
+    );
+    const ageContext = getContextSnippet(
+      promptConstants,
+      "ageGroup",
+      context.ageGroup,
+    );
+    const diseaseContext = getContextSnippet(
+      promptConstants,
+      "disease",
+      context.disease,
+    );
+    const stageContext = getContextSnippet(
+      promptConstants,
+      "stageOfChange",
+      context.stageOfChange,
+    );
+    const educationContext = getContextSnippet(
+      promptConstants,
+      "educationLevel",
+      context.educationLevel,
+    );
+    const languageContext = getContextSnippet(
+      promptConstants,
+      "language",
+      context.language,
+    );
     const activityTypeContext = this.getActivityTypeContext(
       context.preferredWorkoutTypes,
     );
-    const notificationTimeContext = this.getNotificationTimeContext(
-      context.preferredNotificationTime,
+    const notificationTimeContext = renderTemplate(
+      promptConstants.templates.notificationTimeContext,
+      { preferredNotificationTime: context.preferredNotificationTime },
     );
 
-    const prompt = `Write 7 motivational messages that are proper length to go in a push notification using a calm, encouraging, and professional tone, like that of a health coach to motivate a smartphone user in increase physical activity levels.  Also create a title for each of push notifications that is a short summary/call to action of the push notification that is paired with it. Return the response as a JSON array with exactly 7 objects, each having "title" and "body" fields. If there is a disease context given, you can reference that disease in some of the nudges. When generating nudges, avoid the word 'healthy' and remove unnecessary qualifiers such as 'brisk' or 'deep'. Suggest only simple, low-risk activities without adding extra exercises or medical disclaimers not provided. Keep messages concise, calm, and practical; focus on one clear activity with plain language. Keep recommendations practical, varied, and easy to integrate into daily routines. NEVER USE EM DASHES, EMOJIS OR ABBREVIATIONS FOR DISEASES IN THE NUDGE. Each nudge should be personalized to the following information: ${languageContext} ${genderContext} ${ageContext} ${diseaseContext} ${stageContext} ${educationContext} ${notificationTimeContext} Think carefully before delivering the prompts to ensure they are personalized to the information given (especially any given disease context) and give recommendations based on research backed motivational methods.`;
+    const prompt = buildPrompt(context);
     const startTime = Date.now();
 
     try {
@@ -458,6 +415,7 @@ class NudgePermutationTester {
     outputDir?: string,
     requireStageOfChange = false,
     requireComorbidity = false,
+    providedContexts?: TestContext[],
   ): Promise<void> {
     if (this.modelsToTest.length === 0) {
       throw new Error(
@@ -486,16 +444,17 @@ class NudgePermutationTester {
       }
     }
 
-    const allPermutations = this.generateAllPermutations(
-      requireStageOfChange,
-      requireComorbidity,
-    );
+    const allPermutations =
+      providedContexts ??
+      this.generateAllPermutations(requireStageOfChange, requireComorbidity);
 
-    let permutationsToTest: TestContext[];
-    if (maxPermutations) {
+    let permutationsToTest: TestContext[] = allPermutations;
+    if (!providedContexts && maxPermutations) {
       if (randomize) {
-        const shuffled = this.shuffleArray(allPermutations);
-        permutationsToTest = shuffled.slice(0, maxPermutations);
+        permutationsToTest = this.shuffleArray(allPermutations).slice(
+          0,
+          maxPermutations,
+        );
       } else {
         permutationsToTest = allPermutations.slice(0, maxPermutations);
       }
@@ -503,9 +462,11 @@ class NudgePermutationTester {
       permutationsToTest = allPermutations;
     }
 
-    console.log(`Generated ${allPermutations.length} total permutations`);
     console.log(
-      `Testing ${permutationsToTest.length} permutations${randomize ? " (randomly selected)" : ""}`,
+      `${providedContexts ? "Loaded" : "Generated"} ${allPermutations.length} total ${providedContexts ? "contexts" : "permutations"}`,
+    );
+    console.log(
+      `Testing ${permutationsToTest.length} ${providedContexts ? "contexts" : "permutations"}${!providedContexts && randomize ? " (randomly selected)" : ""}`,
     );
     console.log(
       `Testing ${this.modelsToTest.length} model(s): ${this.modelsToTest.map((m) => m.id).join(", ")}`,
@@ -572,7 +533,8 @@ class NudgePermutationTester {
     }
 
     const suffix =
-      maxPermutations ?
+      providedContexts ? "_from-json"
+      : maxPermutations ?
         `_sample_${maxPermutations}${randomize ? "_random" : ""}${requireStageOfChange ? "_require-stage" : ""}${requireComorbidity ? "_require-comorbidity" : ""}`
       : `_full${requireStageOfChange ? "_require-stage" : ""}${requireComorbidity ? "_require-comorbidity" : ""}`;
 
@@ -605,6 +567,7 @@ const parseCLIArgs = (): {
   provider?: string;
   pythonServiceUrl?: string;
   outputDir?: string;
+  contextsJsonPath?: string;
 } => {
   const args = process.argv.slice(2);
   const result: {
@@ -616,6 +579,7 @@ const parseCLIArgs = (): {
     provider?: string;
     pythonServiceUrl?: string;
     outputDir?: string;
+    contextsJsonPath?: string;
   } = {
     randomize: false,
     requireStageOfChange: false,
@@ -664,7 +628,83 @@ const parseCLIArgs = (): {
     result.outputDir = args[index + 1];
   }
 
+  if (args.includes("--contexts-json")) {
+    const index = args.indexOf("--contexts-json");
+    result.contextsJsonPath = args[index + 1];
+  }
+
   return result;
+};
+
+const parseContextsFromJson = (jsonPath: string): TestContext[] => {
+  const resolvedPath = path.resolve(jsonPath);
+  const raw = fs.readFileSync(resolvedPath, "utf8");
+  const parsed = JSON.parse(raw) as unknown;
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(
+      `Expected an array of contexts in ${resolvedPath}, but got ${typeof parsed}`,
+    );
+  }
+
+  const contexts: TestContext[] = parsed.map((value, index) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(
+        `Context at index ${index} in ${resolvedPath} must be an object`,
+      );
+    }
+
+    const context = value as Record<string, unknown>;
+    for (const key of REQUIRED_CONTEXT_KEYS) {
+      if (!(key in context)) {
+        throw new Error(
+          `Missing required key '${key}' in context at index ${index} in ${resolvedPath}`,
+        );
+      }
+    }
+
+    const requiredStringFields: Array<keyof Omit<TestContext, "disease">> = [
+      "genderIdentity",
+      "ageGroup",
+      "stageOfChange",
+      "educationLevel",
+      "language",
+      "preferredWorkoutTypes",
+      "preferredNotificationTime",
+    ];
+
+    for (const field of requiredStringFields) {
+      const fieldValue = context[field];
+      if (typeof fieldValue !== "string" || fieldValue.trim() === "") {
+        throw new Error(
+          `Field '${field}' must be a non-empty string in context at index ${index} in ${resolvedPath}`,
+        );
+      }
+    }
+
+    const diseaseValue = context.disease;
+    if (
+      diseaseValue !== null &&
+      (typeof diseaseValue !== "string" || diseaseValue.trim() === "")
+    ) {
+      throw new Error(
+        `Field 'disease' must be null or a non-empty string in context at index ${index} in ${resolvedPath}`,
+      );
+    }
+
+    return {
+      genderIdentity: context.genderIdentity as string,
+      ageGroup: context.ageGroup as string,
+      disease: diseaseValue as Disease | null,
+      stageOfChange: context.stageOfChange as StageOfChange,
+      educationLevel: context.educationLevel as EducationLevel,
+      language: context.language as string,
+      preferredWorkoutTypes: context.preferredWorkoutTypes as string,
+      preferredNotificationTime: context.preferredNotificationTime as string,
+    };
+  });
+
+  return contexts;
 };
 
 const selectModels = (
@@ -736,6 +776,21 @@ const main = async () => {
     pythonServiceUrl,
     secureGPTApiKey,
   );
+  if (cliArgs.contextsJsonPath && cliArgs.maxPermutations) {
+    console.warn(
+      "Warning: --sample is ignored when --contexts-json is provided.",
+    );
+  }
+  if (cliArgs.contextsJsonPath && cliArgs.randomize) {
+    console.warn(
+      "Warning: --random is ignored when --contexts-json is provided.",
+    );
+  }
+  const providedContexts =
+    cliArgs.contextsJsonPath ?
+      parseContextsFromJson(cliArgs.contextsJsonPath)
+    : undefined;
+
   tester.setModelsToTest(modelsToTest);
   await tester.runAllPermutations(
     cliArgs.maxPermutations,
@@ -743,6 +798,7 @@ const main = async () => {
     cliArgs.outputDir,
     cliArgs.requireStageOfChange,
     cliArgs.requireComorbidity,
+    providedContexts,
   );
   console.log("Testing complete!");
 };

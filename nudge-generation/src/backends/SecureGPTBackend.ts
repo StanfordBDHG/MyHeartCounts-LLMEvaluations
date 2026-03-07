@@ -8,6 +8,10 @@
 
 import { type ModelBackend, type GenerateOptions } from "./ModelBackend.js";
 import { type ModelConfig } from "../config/models.js";
+import {
+  NUDGE_MESSAGES_JSON_SCHEMA,
+  NUDGE_MESSAGES_SCHEMA_NAME,
+} from "../config/nudgeResponseSchema.js";
 
 interface SecureGPTModelInfo {
   endpoint: string;
@@ -291,37 +295,8 @@ export class SecureGPTBackend implements ModelBackend {
     body.response_format = {
       type: "json_schema",
       json_schema: {
-        name: "nudge_messages",
-        schema: {
-          type: "object",
-          properties: {
-            nudges: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: {
-                    type: "string",
-                    description:
-                      "Short summary/call to action for the push notification",
-                  },
-                  body: {
-                    type: "string",
-                    description:
-                      "Motivational message content for the push notification",
-                  },
-                },
-                required: ["title", "body"],
-                additionalProperties: false,
-              },
-              minItems: 7,
-              maxItems: 7,
-              description: "Exactly 7 nudge messages",
-            },
-          },
-          required: ["nudges"],
-          additionalProperties: false,
-        },
+        name: NUDGE_MESSAGES_SCHEMA_NAME,
+        schema: NUDGE_MESSAGES_JSON_SCHEMA,
       },
     };
 
