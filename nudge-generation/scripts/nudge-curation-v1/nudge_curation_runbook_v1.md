@@ -32,6 +32,25 @@ Run this from `nudge-generation`:
 npm run build && node dist/generateNudgePermutations.js --models "gpt-5,mlx-community/Ministral-3-3B-Instruct-2512-4bit,mlx-community/Qwen2.5-1.5B-Instruct-4bit,mlx-community/Llama-3.2-1B-Instruct-4bit,mlx-community/SmolLM3-3B-4bit" --contexts-json scripts/nudge-curation-v1/patient_contexts_seed42.json --output ../data/generated/nudge-curation-v1
 ```
 
+### 3.1) Run Nudge Generation on MHC-Coach using TogetherAI
+```bash
+together endpoints hardware --model iamsriya/Meta-Llama-3-70B-Instruct-74d1928d  # check which hardware is available
+together endpoints create \
+--model iamsriya/Meta-Llama-3-70B-Instruct-74d1928d \
+--hardware 4x_nvidia_h100_80gb_sxm \
+--no-speculative-decoding \
+--wait
+together endpoints retrieve <ENDPOINT_ID>  # to get endpoint name
+```
+
+Then run inference using the Together Python API. Finally, stop/delete the TogetherAI endpoint:
+
+```bash
+together endpoints stop <ENDPOINT_ID>
+together endpoints delete <ENDPOINT_ID>
+```
+
+
 ## 4) Deterministically Sample One Nudge per Model Response
 
 Run this from `nudge-generation`:
@@ -39,3 +58,5 @@ Run this from `nudge-generation`:
 ```bash
 python3 scripts/nudge-curation-v1/sample_single_nudge_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_multi-provider_6models_from-json.csv
 ```
+
+python3 scripts/nudge-curation-v1/sample_single_nudge_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_mhc-coach-llama.csv
