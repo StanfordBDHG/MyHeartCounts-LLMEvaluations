@@ -88,6 +88,54 @@ def spearman(xs: list[float], ys: list[float]) -> float:
     return pearson(rank(xs), rank(ys))
 
 
+def summarize_rating_distribution(scores: list[float]) -> dict[str, Any]:
+    if not scores:
+        return {
+            "n": 0,
+            "mean": float("nan"),
+            "median": float("nan"),
+            "stddev": float("nan"),
+            "min": float("nan"),
+            "max": float("nan"),
+            "range": float("nan"),
+            "histogram_counts": {str(score): 0 for score in range(1, 8)},
+            "histogram_percentages": {str(score): float("nan") for score in range(1, 8)},
+            "out_of_scale_values": [],
+        }
+
+    mean = sum(scores) / len(scores)
+    median = statistics.median(scores)
+    stddev = statistics.pstdev(scores) if len(scores) > 1 else 0.0
+    min_score = min(scores)
+    max_score = max(scores)
+    range_score = max_score - min_score
+
+    histogram_counts: dict[str, int] = {str(score): 0 for score in range(1, 8)}
+    out_of_scale_values: list[float] = []
+    for score in scores:
+        if float(score).is_integer() and 1 <= int(score) <= 7:
+            histogram_counts[str(int(score))] += 1
+        else:
+            out_of_scale_values.append(score)
+
+    histogram_percentages = {
+        key: (value / len(scores)) * 100.0 for key, value in histogram_counts.items()
+    }
+
+    return {
+        "n": len(scores),
+        "mean": mean,
+        "median": median,
+        "stddev": stddev,
+        "min": min_score,
+        "max": max_score,
+        "range": range_score,
+        "histogram_counts": histogram_counts,
+        "histogram_percentages": histogram_percentages,
+        "out_of_scale_values": sorted(set(out_of_scale_values)),
+    }
+
+
 def main() -> int:
     args = parse_args()
 
@@ -199,6 +247,7 @@ def main() -> int:
 
     non_ci_pair_rows = [row for row in pair_rows if not row["stable_key"].startswith("ci_")]
     ci_pair_rows = [row for row in pair_rows if row["stable_key"].startswith("ci_")]
+    non_ci_pair_keys = {(row["human_nudge_id"], row["stable_key"]) for row in non_ci_pair_rows}
 
     llm_means = [row["llm_mean"] for row in non_ci_pair_rows]
     human_means = [row["human_mean"] for row in non_ci_pair_rows]
@@ -421,6 +470,25 @@ def main() -> int:
         },
     }
 
+    # Rating distribution analysis (non-CI only), computed on comparable mapped pairs.
+    human_non_ci_scores = [
+        float(row["score_int"])
+        for row in human_rows
+        if (row["human_nudge_id"], row["stable_key"]) in non_ci_pair_keys
+    ]
+    llm_non_ci_scores = [
+        float(row["score_int"])
+        for row in llm_rows
+        if row["score_int"] is not None
+        and row.get("stable_key", "").startswith("ci_") is False
+        and (llm_to_human_nudge_id.get(row["nudge_id"]), row["stable_key"]) in non_ci_pair_keys
+    ]
+    non_ci_rating_distribution = {
+        "scope": "comparable mapped non-CI rows only",
+        "human": summarize_rating_distribution(human_non_ci_scores),
+        "llm": summarize_rating_distribution(llm_non_ci_scores),
+    }
+
     summary = {
         "overall": overall,
         "counts": {
@@ -439,6 +507,7 @@ def main() -> int:
         },
         "overall_including_ci": overall_including_ci,
         "diff_distribution": diff_distribution,
+        "non_ci_rating_distribution": non_ci_rating_distribution,
         "context_inclusion_binary": {
             "mapping": {"1": "no", "7": "yes"},
             "value_check": {
@@ -512,6 +581,13 @@ def main() -> int:
         "CI value check -> "
         f"llm_unique={llm_ci_unique_values}, "
         f"human_unique={human_ci_unique_values}"
+    )
+    print(
+        "Non-CI distributions -> "
+        f"human_n={non_ci_rating_distribution['human']['n']}, "
+        f"llm_n={non_ci_rating_distribution['llm']['n']}, "
+        f"human_mean={non_ci_rating_distribution['human']['mean']:.3f}, "
+        f"llm_mean={non_ci_rating_distribution['llm']['mean']:.3f}"
     )
     return 0
 

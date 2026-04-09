@@ -49,6 +49,37 @@ Pairwise difference distribution:
   - `1 to 2`: **13**
   - `> 2`: **11**
 
+## Non-CI Rating Distributions (Human vs LLM)
+
+Scope: comparable mapped non-CI rows only (`n=132` for each source).
+
+Summary statistics:
+
+| Source | n | Mean | Median | Std Dev | Min | Max | Range |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Human ratings | 132 | 5.59 | 6.00 | 1.36 | 2 | 7 | 5 |
+| LLM ratings | 132 | 5.55 | 6.00 | 0.85 | 3 | 7 | 4 |
+
+Histogram (counts by score 1-7):
+
+| Source | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Human ratings | 0 | 5 | 7 | 16 | 20 | 45 | 39 |
+| LLM ratings | 0 | 0 | 7 | 3 | 40 | 75 | 7 |
+
+Histogram (percent by score 1-7):
+
+| Source | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Human ratings | 0.0% | 3.8% | 5.3% | 12.1% | 15.2% | 34.1% | 29.5% |
+| LLM ratings | 0.0% | 0.0% | 5.3% | 2.3% | 30.3% | 56.8% | 5.3% |
+
+Interpretation:
+
+- Both distributions center around score 6 (median 6.0).
+- LLM ratings are more concentrated (lower std dev), especially at score 6.
+- Humans use more of the upper range (more 7s) and also a broader spread down to 2.
+
 ## Context Inclusion as Binary Classification (`ci_*`)
 
 For `ci_*` stable keys, scores were converted as:
