@@ -20,11 +20,19 @@
  * - SUPABASE_HEARTBEAT_SCHEMA (default: public)
  */
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const HEARTBEAT_TABLE = process.env.SUPABASE_HEARTBEAT_TABLE ?? "heartbeat";
-const HEARTBEAT_ID = Number(process.env.SUPABASE_HEARTBEAT_ID ?? "1");
-const HEARTBEAT_SCHEMA = process.env.SUPABASE_HEARTBEAT_SCHEMA ?? "public";
+const nonEmptyOrUndefined = (value) => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const SUPABASE_URL = nonEmptyOrUndefined(process.env.SUPABASE_URL);
+const SUPABASE_SERVICE_ROLE_KEY = nonEmptyOrUndefined(process.env.SUPABASE_SERVICE_ROLE_KEY);
+const HEARTBEAT_TABLE = nonEmptyOrUndefined(process.env.SUPABASE_HEARTBEAT_TABLE) ?? "heartbeat";
+const HEARTBEAT_ID = Number(nonEmptyOrUndefined(process.env.SUPABASE_HEARTBEAT_ID) ?? "1");
+const HEARTBEAT_SCHEMA = nonEmptyOrUndefined(process.env.SUPABASE_HEARTBEAT_SCHEMA) ?? "public";
 
 if (!SUPABASE_URL) {
   throw new Error("Missing SUPABASE_URL");
