@@ -15,13 +15,14 @@
     "url": "https://github.com/StanfordBDHG/MyHeartCounts-LLMEvaluations"
   },
   "scripts": {
-    "install": "npm --prefix nudge-generation install && npm --prefix custom-survey-service install",
-    "lint": "npm --prefix nudge-generation run lint && npm --prefix custom-survey-service run lint",
-    "lint:fix": "npm --prefix nudge-generation run lint:fix && npm --prefix custom-survey-service run lint:fix",
-    "lint:strict": "npm --prefix nudge-generation run lint:strict && npm --prefix custom-survey-service run lint:strict",
+    "install": "npm --prefix nudge-generation install && npm --prefix custom-survey-service install && npm --prefix nudge-evaluation/llm-as-judge install",
+    "lint": "npm --prefix nudge-generation run lint && npm --prefix custom-survey-service run lint && npm --prefix nudge-evaluation/llm-as-judge run lint",
+    "lint:fix": "npm --prefix nudge-generation run lint:fix && npm --prefix custom-survey-service run lint:fix && npm --prefix nudge-evaluation/llm-as-judge run lint:fix",
+    "lint:strict": "npm --prefix nudge-generation run lint:strict && npm --prefix custom-survey-service run lint:strict && npm --prefix nudge-evaluation/llm-as-judge run lint:strict",
     "build": "npm --prefix nudge-generation run build && npm --prefix custom-survey-service run build",
     "test:ci": "npm --prefix nudge-generation run test:ci",
-    "supabase:heartbeat": "node scripts/supabase-heartbeat.mjs"
+    "supabase:heartbeat": "node scripts/supabase-heartbeat.mjs",
+    "judge:llm": "npm --prefix nudge-evaluation/llm-as-judge run judge"
   },
   "devDependencies": {
     "@stanfordspezi/spezi-web-configurations": "^0.6.0",

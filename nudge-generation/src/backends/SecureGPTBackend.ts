@@ -36,6 +36,14 @@ interface OpenAIRequestBody {
   [key: string]: unknown;
 }
 
+interface ResponseFormat {
+  type: string;
+  json_schema: {
+    name: string;
+    schema: Record<string, unknown>;
+  };
+}
+
 interface GeminiRequestBody {
   contents: Array<{
     role: string;
@@ -251,6 +259,11 @@ export class SecureGPTBackend implements ModelBackend {
     prompt: string,
     options: GenerateOptions | undefined,
   ): Promise<Response> {
+    const responseFormat =
+      typeof options?.response_format === "object" ?
+        (options.response_format as ResponseFormat | undefined)
+      : undefined;
+
     const url =
       this.modelInfo.apiVersion ?
         `${this.modelInfo.endpoint}?api-version=${this.modelInfo.apiVersion}`
@@ -292,7 +305,7 @@ export class SecureGPTBackend implements ModelBackend {
       }
     }
 
-    body.response_format = {
+    body.response_format = responseFormat ?? {
       type: "json_schema",
       json_schema: {
         name: NUDGE_MESSAGES_SCHEMA_NAME,

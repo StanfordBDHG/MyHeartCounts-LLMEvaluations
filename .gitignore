@@ -155,3 +155,6 @@ data/
 
 # Jupyter notebooks
 *.ipynb
+
+# Analysis temp files
+analysis_temp/

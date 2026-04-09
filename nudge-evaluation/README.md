@@ -12,6 +12,10 @@ For project overview and quick start, see the [root README](../README.md).
 
 ## Available Tools
 
+### LLM-As-Judge (`llm-as-judge/`)
+
+Evaluates a single nudge against the same question set and scoring rubrics used by the custom survey service, using OpenAI or SecureGPT backends reused from `nudge-generation`. Produces JSON and CSV artifacts for downstream analysis.
+
 ### Linguistic Analysis (`analyzeNudgeLinguistics.py`)
 
 Performs automated linguistic analyses on generated nudges from CSV files. It extracts individual nudges (titles and bodies) from the JSON responses and computes comprehensive linguistic features.
