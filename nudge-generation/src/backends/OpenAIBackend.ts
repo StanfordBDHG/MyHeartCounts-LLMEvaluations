@@ -33,6 +33,19 @@ export class OpenAIBackend implements ModelBackend {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
+      const responseFormat =
+        typeof options?.response_format === "object" ?
+          (options.response_format as
+            | {
+                type: "json_schema";
+                json_schema: {
+                  name: string;
+                  schema: Record<string, unknown>;
+                };
+              }
+            | undefined)
+        : undefined;
+
       const response = await this.openai.chat.completions.create(
         {
           model: this.modelId,
@@ -44,7 +57,7 @@ export class OpenAIBackend implements ModelBackend {
           ],
           max_tokens: options?.maxTokens,
           temperature: options?.temperature,
-          response_format: {
+          response_format: responseFormat ?? {
             type: "json_schema",
             json_schema: {
               name: NUDGE_MESSAGES_SCHEMA_NAME,
