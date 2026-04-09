@@ -1,6 +1,5 @@
 project-includes = [
     "**/*.py*",
-    "**/*.ipynb",
 ]
 
 ignore-missing-imports = [

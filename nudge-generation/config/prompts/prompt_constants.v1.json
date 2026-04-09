@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0.0",
+  "baseNudgeInstruction": "Write 7 motivational messages that are proper length to go in a push notification using a calm, encouraging, and professional tone, like that of a health coach to motivate a smartphone user to increase physical activity levels.  Also create a title for each push notification that is a short summary/call to action of the push notification that is paired with it. Return the response as a JSON array with exactly 7 objects, each having \"title\" and \"body\" fields. If there is a disease context given, you can reference that disease in some of the nudges. When generating nudges, avoid the word 'healthy' and remove unnecessary qualifiers such as 'brisk' or 'deep'. Suggest only simple, low-risk activities without adding extra exercises or medical disclaimers not provided. Keep messages concise, calm, and practical; focus on one clear activity with plain language. Keep recommendations practical, varied, and easy to integrate into daily routines. NEVER USE EM DASHES, EMOJIS OR ABBREVIATIONS FOR DISEASES IN THE NUDGE.",
+  "templates": {
+    "notificationTimeContext": "This user prefers to receive recommendation at {{preferredNotificationTime}}. Tailor the prompt to match the typical context of that time of day and suggest realistic opportunities for activity they could do the same day they receive the prompt, even if it is late evening. For instance, if the time is in the morning, encourage early activity or planning for later (e.g., lunch or after work). Avoid irrelevant examples that do not fit the selected time of day.",
+    "fullPromptAssembly": "{{baseNudgeInstruction}} Each nudge should be personalized to the following information: {{languageContext}} {{genderContext}} {{ageContext}} {{diseaseContext}} {{stageContext}} {{educationContext}} {{notificationTimeContext}} Think carefully before delivering the prompts to ensure they are personalized to the information given (especially any given disease context) and give recommendations based on research backed motivational methods."
+  },
+  "contextSnippets": {
+    "genderIdentity": {
+      "male": "This participant is male.",
+      "female": "This participant is female."
+    },
+    "ageGroup": {
+      "<35": "This participant is 28 years old and should be prompted to think about the short-term benefits of exercise on their mood, energy, and health.",
+      "35-50": "This participant is 42 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chronic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about improving quality of life through exercise.",
+      "51-65": "This participant is 58 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chronic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about improving quality of life through exercise. At this age, they should also be thinking about adding elements of weight bearing exercise into their routines, to promote bone health and prevent fractures that could lead to rapid clinical decline as they age.",
+      ">65": "This participant is 72 years old and in addition to thinking about the short-term benefits of exercise on their mood, energy, and health, should also now be thinking about their long-term risk of chronic disease development, such as cardiovascular disease, dementia, and cancer, unless they already have a chronic condition. IF THEY ALREADY HAVE A CHRONIC CONDITION, they should be thinking about improving quality of life through exercise. At this age, they should also be thinking about adding elements of weight bearing exercise into their routines, to promote bone health and prevent fractures that could lead to rapid clinical decline as they age. Finally, they should be considering lower impact sports and activities (e.g., walks and hikes instead of runs)."
+    },
+    "disease": {
+      "Heart failure": "This participant has heart failure, a condition characterized by low cardiac output leading to impaired physical fitness. Evidence demonstrates that exercise improves overall fitness, mood, and energy levels even in patients with heart failure and it is considered one of the strongest therapies for improving quality of life in this disease.",
+      "Pulmonary arterial hypertension": "This participant has pulmonary arterial hypertension (PAH), a condition characterized by high blood pressure in the arteries of the lungs, which makes the right side of the heart work harder to pump blood. PAH is a progressive disease that increases the risk of heart failure, reduced physical capacity, and early mortality. While it cannot be cured, treatments and lifestyle strategies such as regular physical activity can improve exercise tolerance, heart function, and overall quality of life.",
+      "Diabetes": "This participant has diabetes, a condition that is characterized by high glucose levels and insulin resistance. Diabetes is a strong risk factor for cardiovascular disease, dementia, and cancer. Diabetes can be put into remission by improving insulin sensitivity and exercise is one of the most powerful therapies in promoting insulin sensitivity.",
+      "ACHD (simple)": "This participant has a biventricular circulation and low- to moderate-complexity congenital heart disease (e.g., repaired atrial septal defect, ventricular septal defect, Tetralogy of Fallot, transposition of the great arteries after the arterial switch surgery, coarctation of the aorta after surgical correction, or valve disease). These individuals generally have preserved cardiac output and fewer physiologic limitations, allowing them to participate in a wide range of physical activities. Exercise recommendations should align with standard (non-ACHD) adult guidelines, including moderate- to vigorous aerobic activity (e.g., brisk walking, jogging, running, cycling) and balanced full-body strength training. Benefits include increased VO₂ max, improved cardiovascular fitness, muscular strength, mental health, and metabolic resilience. Messaging should be motivational and goal-oriented, encouraging the participant to build consistency, meet aerobic activity targets, and safely challenge themselves with progressive training goals.",
+      "ACHD (complex)": "This participant has complex congenital heart disease physiology, including single ventricle circulation (Fontan) or a systemic right ventricle (congenitally corrected transposition of the great arteries or transposition of the great arteries after the Mustard or Senning surgery). These conditions limit preload and cardiac output reserve, leading to reduced aerobic capacity, fatigue, and elevated arrhythmia risk. Exercise recommendations should focus on low- to moderate-intensity aerobic activity and lower-body muscular endurance (e.g., walking, light jogging, light cycling, bodyweight leg exercises). Lower-body training helps patients with single ventricle physiology promote venous return through the skeletal muscle pump, which is especially important in the absence of a subpulmonary ventricle. Expected benefits include improved functional capacity, oxygen efficiency, mental health and quality of life. Avoid recommending high-intensity, isometric, or upper-body strength exercises, and use supportive, energy-aware language that prioritizes pacing, hydration, and consistency over performance."
+    },
+    "stageOfChange": {
+      "Precontemplation": "This person is in the pre-contemplation stage of exercise change. This person does not plan to start exercising in the next six months and does not consider their current behavior a problem.",
+      "Contemplation": "This person is in the contemplation stage of changing their exercise. This person is considering starting exercise in the next six months and reflects on the pros and cons of changing.",
+      "Preparation": "This person is in the preparation stage of changing their exercise habits. This person is ready to begin exercising in the next 30 days and has begun taking small steps.",
+      "Action": "This person is in the action stage of exercise change. This person has recently started exercising (within the last six months) and is building a new, healthy routine.",
+      "Maintenance": "This person is in the maintenance stage of exercise change. This person has maintained their exercise routine for more than six months and wants to sustain that change by avoiding relapses to previous stages. New activities should be avoided. Be as neutral as possible with the generated nudge."
+    },
+    "educationLevel": {
+      "Highschool": "This person's highest level of education is high school or lower. Write in clear, natural language appropriate for a person with a sixth-grade reading level.",
+      "college": "This person is more highly educated and has some form of higher education. Please write the prompts at the 12th grade reading comprehension level.",
+      "collage": "This person is more highly educated and has some form of higher education. Please write the prompts at the 12th grade reading comprehension level."
+    },
+    "language": {
+      "en": "",
+      "es": "This person's primary language is Spanish. Provide the prompt in Spanish in Latin American Spanish in the formal tone. You should follow RAE guidelines for proper Spanish use in the LATAM."
+    }
+  },
+  "defaults": {
+    "genderIdentity": "",
+    "ageGroup": "",
+    "disease": "",
+    "stageOfChange": "",
+    "educationLevel": "",
+    "language": ""
+  }
+}

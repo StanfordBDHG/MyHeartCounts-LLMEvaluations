@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prompt Constants Schema",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "baseNudgeInstruction",
+    "templates",
+    "contextSnippets",
+    "defaults"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseNudgeInstruction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "templates": {
+      "type": "object",
+      "required": ["notificationTimeContext", "fullPromptAssembly"],
+      "properties": {
+        "notificationTimeContext": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\{\\{preferredNotificationTime\\}\\}"
+        },
+        "fullPromptAssembly": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "contextSnippets": {
+      "type": "object",
+      "required": [
+        "genderIdentity",
+        "ageGroup",
+        "disease",
+        "stageOfChange",
+        "educationLevel",
+        "language"
+      ],
+      "properties": {
+        "genderIdentity": { "$ref": "#/$defs/stringMap" },
+        "ageGroup": { "$ref": "#/$defs/stringMap" },
+        "disease": { "$ref": "#/$defs/stringMap" },
+        "stageOfChange": { "$ref": "#/$defs/stringMap" },
+        "educationLevel": { "$ref": "#/$defs/stringMap" },
+        "language": { "$ref": "#/$defs/stringMap" }
+      },
+      "additionalProperties": false
+    },
+    "defaults": {
+      "type": "object",
+      "required": [
+        "genderIdentity",
+        "ageGroup",
+        "disease",
+        "stageOfChange",
+        "educationLevel",
+        "language"
+      ],
+      "properties": {
+        "genderIdentity": { "type": "string" },
+        "ageGroup": { "type": "string" },
+        "disease": { "type": "string" },
+        "stageOfChange": { "type": "string" },
+        "educationLevel": { "type": "string" },
+        "language": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "stringMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

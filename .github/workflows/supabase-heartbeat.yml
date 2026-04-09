@@ -1,0 +1,43 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health MyHeart Counts open-source project based on the Stanford Spezi Template Application project
+#
+# SPDX-FileCopyrightText: 2025-2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Supabase Heartbeat
+
+on:
+  schedule:
+    # Run every 3 days at 04:17 UTC.
+    - cron: "17 4 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run Supabase heartbeat
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Optional; defaults to "heartbeat"
+          SUPABASE_HEARTBEAT_TABLE: ${{ secrets.SUPABASE_HEARTBEAT_TABLE }}
+          # Optional; defaults to "public"
+          SUPABASE_HEARTBEAT_SCHEMA: ${{ secrets.SUPABASE_HEARTBEAT_SCHEMA }}
+          # Optional; defaults to "1"
+          SUPABASE_HEARTBEAT_ID: ${{ secrets.SUPABASE_HEARTBEAT_ID }}
+        run: npm run supabase:heartbeat

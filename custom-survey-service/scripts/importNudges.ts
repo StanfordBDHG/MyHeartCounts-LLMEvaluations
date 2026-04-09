@@ -29,6 +29,7 @@ interface CsvRow {
   languageContext?: string;
   notificationTimeContext?: string;
   llmResponse?: string;
+  sampledNudgeJson?: string;
 }
 
 interface Nudge {
@@ -44,11 +45,33 @@ const parseResponse = (raw: string): Array<{ title: string; body: string }> => {
   if (Array.isArray(parsed)) {
     return parsed as Array<{ title: string; body: string }>;
   }
+  if (
+    parsed &&
+    typeof parsed === "object" &&
+    "title" in parsed &&
+    "body" in parsed
+  ) {
+    return [parsed as { title: string; body: string }];
+  }
   if (parsed && typeof parsed === "object" && "nudges" in parsed) {
     return (parsed as { nudges: Array<{ title: string; body: string }> })
       .nudges;
   }
   return [];
+};
+
+const getRawResponse = (
+  row: CsvRow,
+): { raw: string; sourceColumn: "llmResponse" | "sampledNudgeJson" } | null => {
+  const llmResponse = row.llmResponse?.trim();
+  if (llmResponse) {
+    return { raw: llmResponse, sourceColumn: "llmResponse" };
+  }
+  const sampledNudgeJson = row.sampledNudgeJson?.trim();
+  if (sampledNudgeJson) {
+    return { raw: sampledNudgeJson, sourceColumn: "sampledNudgeJson" };
+  }
+  return null;
 };
 
 const normalizeText = (value: string | undefined): string | null => {
@@ -103,11 +126,23 @@ const main = async () => {
   });
 
   const nudges: Nudge[] = [];
-  for (const row of rows) {
-    if (!row.llmResponse) {
+  let skippedMalformedJsonRows = 0;
+  for (const [index, row] of rows.entries()) {
+    const response = getRawResponse(row);
+    if (!response) {
       continue;
     }
-    const parsedNudges = parseResponse(row.llmResponse);
+    let parsedNudges: Array<{ title: string; body: string }> = [];
+    try {
+      parsedNudges = parseResponse(response.raw);
+    } catch (error: unknown) {
+      skippedMalformedJsonRows += 1;
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `Skipping row ${index + 2}: malformed JSON in ${response.sourceColumn} (${reason})`,
+      );
+      continue;
+    }
     const metadataJson = buildMetadataJson(row);
     const metadataFingerprint = JSON.stringify(metadataJson);
     for (const nudge of parsedNudges) {
@@ -140,6 +175,11 @@ const main = async () => {
   }
 
   console.log(`Imported ${nudges.length} nudge rows from ${absolutePath}`);
+  if (skippedMalformedJsonRows > 0) {
+    console.log(
+      `Skipped ${skippedMalformedJsonRows} row(s) due to malformed JSON.`,
+    );
+  }
 };
 
 void main().catch((error: unknown) => {

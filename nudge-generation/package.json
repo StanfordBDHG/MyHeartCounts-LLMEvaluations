@@ -17,6 +17,9 @@
     "test:openai": "npm run build && node dist/generateNudgePermutations.js --provider openai --sample 1",
     "test:all": "npm run build && node dist/generateNudgePermutations.js --provider all --sample 1",
     "test:ci": "npm run build && node dist/generateNudgePermutations.js --model llama4-maverick --sample 1",
+    "test:prompt-constants:ts": "npm run build && node dist/tests/promptConstantsLoader.test.js",
+    "test:prompt-constants:py": "python3 -m unittest scripts/tests/test_prompt_constants_loader.py",
+    "test:prompt-constants": "npm run test:prompt-constants:ts && npm run test:prompt-constants:py",
     "start:python-service": "cd python_service && python -m uvicorn huggingface_service:app --reload"
   },
   "dependencies": {
