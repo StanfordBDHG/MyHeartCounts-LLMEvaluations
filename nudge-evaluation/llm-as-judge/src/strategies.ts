@@ -107,9 +107,7 @@ const mergeScoresWithQuestions = (
         throw new Error(`Duplicate stable_key in scores: ${score.stable_key}`);
       }
       if (!questionStableKeys.has(score.stable_key)) {
-        throw new Error(
-          `Unexpected stable_key in scores: ${score.stable_key}`,
-        );
+        throw new Error(`Unexpected stable_key in scores: ${score.stable_key}`);
       }
       accumulator.set(score.stable_key, score);
       return accumulator;
