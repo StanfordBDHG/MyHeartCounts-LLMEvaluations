@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -134,6 +135,18 @@ def summarize_rating_distribution(scores: list[float]) -> dict[str, Any]:
         "histogram_percentages": histogram_percentages,
         "out_of_scale_values": sorted(set(out_of_scale_values)),
     }
+
+
+def sanitize_non_finite_floats(value: Any) -> Any:
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: sanitize_non_finite_floats(nested) for key, nested in value.items()}
+    if isinstance(value, list):
+        return [sanitize_non_finite_floats(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(sanitize_non_finite_floats(item) for item in value)
+    return value
 
 
 def main() -> int:
@@ -343,8 +356,12 @@ def main() -> int:
             pair = (row["human_nudge_id"], row["stable_key"])
             if pair not in llm_ci_pred_by_pair:
                 continue
-            pred_positive = llm_ci_pred_by_pair[pair] == 7.0
-            truth_positive = float(row["score_int"]) == 7.0
+            pred_value = llm_ci_pred_by_pair[pair]
+            truth_value = float(row["score_int"])
+            if pred_value not in {1.0, 7.0} or truth_value not in {1.0, 7.0}:
+                continue
+            pred_positive = pred_value == 7.0
+            truth_positive = truth_value == 7.0
             n += 1
             if pred_positive and truth_positive:
                 tp += 1
@@ -535,7 +552,13 @@ def main() -> int:
     }
 
     with (output_dir / "summary.json").open("w", encoding="utf-8") as file:
-        json.dump(summary, file, indent=2)
+        try:
+            json.dump(summary, file, indent=2, allow_nan=False)
+        except ValueError:
+            summary = sanitize_non_finite_floats(summary)
+            file.seek(0)
+            file.truncate()
+            json.dump(summary, file, indent=2, allow_nan=False)
 
     if pair_rows:
         fieldnames = list(pair_rows[0].keys())

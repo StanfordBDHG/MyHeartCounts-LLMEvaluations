@@ -165,6 +165,7 @@ def main() -> int:
     failed = 0
     skipped = 0
     safe_model_id = args.model_id.replace("/", "_")
+    safe_strategy = args.strategy.replace("/", "_")
 
     with csv_path.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -173,8 +174,14 @@ def main() -> int:
                 break
 
             input_json_path = input_cache_dir / f"nudge_{row_index:03d}.json"
-            output_json_path = output_dir / f"nudge_{row_index:03d}_{safe_model_id}.json"
-            output_csv_path = output_dir / f"nudge_{row_index:03d}_{safe_model_id}.csv"
+            output_json_path = (
+                output_dir
+                / f"nudge_{row_index:03d}_{safe_model_id}_{safe_strategy}.json"
+            )
+            output_csv_path = (
+                output_dir
+                / f"nudge_{row_index:03d}_{safe_model_id}_{safe_strategy}.csv"
+            )
 
             if (
                 args.skip_existing

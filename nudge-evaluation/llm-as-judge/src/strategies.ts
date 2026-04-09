@@ -98,8 +98,23 @@ const mergeScoresWithQuestions = (
   questions: SurveyQuestion[],
   scores: QuestionScore[],
 ): QuestionEvaluation[] => {
-  const scoreByStableKey = new Map(
-    scores.map((score) => [score.stable_key, score]),
+  const questionStableKeys = new Set(
+    questions.map((question) => question.stableKey),
+  );
+  const scoreByStableKey = scores.reduce<Map<string, QuestionScore>>(
+    (accumulator, score) => {
+      if (accumulator.has(score.stable_key)) {
+        throw new Error(`Duplicate stable_key in scores: ${score.stable_key}`);
+      }
+      if (!questionStableKeys.has(score.stable_key)) {
+        throw new Error(
+          `Unexpected stable_key in scores: ${score.stable_key}`,
+        );
+      }
+      accumulator.set(score.stable_key, score);
+      return accumulator;
+    },
+    new Map<string, QuestionScore>(),
   );
   return questions.map((question) => {
     const score = scoreByStableKey.get(question.stableKey);
