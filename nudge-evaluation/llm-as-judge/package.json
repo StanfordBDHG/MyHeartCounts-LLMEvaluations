@@ -1,0 +1,22 @@
+{
+  "name": "llm-as-judge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "judge": "node --import tsx src/cli.ts",
+    "judge:batch": "python3 scripts/evaluateCsvBatch.py",
+    "lint": "eslint src && tsc --noEmit",
+    "lint:fix": "eslint src --fix && tsc --noEmit",
+    "lint:strict": "eslint src --max-warnings=0 && tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@stanfordspezi/spezi-web-configurations": "^0.6.0",
+    "@types/node": "^22",
+    "eslint": "^9.39.2",
+    "prettier": "^3.8.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

@@ -35,9 +35,9 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           # Optional; defaults to "heartbeat"
-          SUPABASE_HEARTBEAT_TABLE: ${{ secrets.SUPABASE_HEARTBEAT_TABLE }}
+          SUPABASE_HEARTBEAT_TABLE: ${{ secrets.SUPABASE_HEARTBEAT_TABLE || 'heartbeat' }}
           # Optional; defaults to "public"
-          SUPABASE_HEARTBEAT_SCHEMA: ${{ secrets.SUPABASE_HEARTBEAT_SCHEMA }}
+          SUPABASE_HEARTBEAT_SCHEMA: ${{ secrets.SUPABASE_HEARTBEAT_SCHEMA || 'public' }}
           # Optional; defaults to "1"
-          SUPABASE_HEARTBEAT_ID: ${{ secrets.SUPABASE_HEARTBEAT_ID }}
+          SUPABASE_HEARTBEAT_ID: ${{ secrets.SUPABASE_HEARTBEAT_ID || '1' }}
         run: npm run supabase:heartbeat
