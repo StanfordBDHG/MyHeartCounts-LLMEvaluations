@@ -56,5 +56,15 @@ together endpoints delete <ENDPOINT_ID>
 Run this from `nudge-generation`:
 
 ```bash
-python3 scripts/nudge-curation-v1/sample_single_nudge_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_multi-provider_6models_from-json.csv
+python3 scripts/nudge-curation-v1/sample_single_nudge_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_multi-provider_5models_from-json.csv
+```
+
+## 5) Expand All Nudges to One Row per Nudge
+
+If each input row has 7 nudges, the output will have `7 x input_rows` rows.
+
+Run this from `nudge-generation`:
+
+```bash
+python3 scripts/nudge-curation-v1/expand_all_nudges_per_response_v1.py --input ../data/generated/nudge-curation-v1/nudge_permutations_results_multi-provider_5models_from-json.csv
 ```
