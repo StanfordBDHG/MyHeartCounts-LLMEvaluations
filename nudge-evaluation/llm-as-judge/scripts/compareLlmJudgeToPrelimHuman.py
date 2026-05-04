@@ -41,6 +41,24 @@ def parse_args() -> argparse.Namespace:
         default="nudge-evaluation/llm-as-judge/analysis_temp",
         help="Output directory for summary JSON + pairwise CSV artifacts.",
     )
+    parser.add_argument(
+        "--exclude-evaluator-ids",
+        default="",
+        help=(
+            "Comma-separated list of evaluator UUIDs whose human responses should be "
+            "excluded before computing the pairwise comparison. Useful for stripping "
+            "raters whose scoring patterns are uniform/miscalibrated."
+        ),
+    )
+    parser.add_argument(
+        "--filename-suffix",
+        default="",
+        help=(
+            "Optional suffix to append to the base filenames of generated artifacts "
+            "(e.g. '_uniform_responses_filtered_out'). The suffix is inserted before "
+            "the file extension so existing files are not overwritten."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -137,6 +155,50 @@ def summarize_rating_distribution(scores: list[float]) -> dict[str, Any]:
     }
 
 
+def render_histogram_block(
+    title: str,
+    scores: list[float],
+    value_range: tuple[int, int] = (1, 7),
+    bar_char: str = "█",
+    max_width: int = 40,
+) -> list[str]:
+    """Return markdown lines for a fenced ASCII histogram of one score series.
+
+    Only integer scores within ``value_range`` are bucketed; out-of-scale values
+    are noted below the histogram.
+    """
+    lo, hi = value_range
+    counts = {v: 0 for v in range(lo, hi + 1)}
+    out_of_scale: list[float] = []
+    for score in scores:
+        if float(score).is_integer() and lo <= int(score) <= hi:
+            counts[int(score)] += 1
+        else:
+            out_of_scale.append(float(score))
+    total = sum(counts.values()) + len(out_of_scale)
+    peak = max(counts.values()) if counts else 0
+
+    value_width = max(len(str(v)) for v in counts)
+    count_width = max(len(str(c)) for c in counts.values()) if counts else 1
+
+    lines = [title, "", "```"]
+    for value in sorted(counts.keys()):
+        count = counts[value]
+        percent = (count / total) if total else 0.0
+        bar_len = 0 if peak == 0 else round((count / peak) * max_width)
+        bar = bar_char * bar_len if bar_len > 0 else ""
+        lines.append(
+            f"{str(value).rjust(value_width)} | {bar.ljust(max_width)} "
+            f"{str(count).rjust(count_width)} ({percent:>5.1%})"
+        )
+    lines.append("```")
+    lines.append("")
+    if out_of_scale:
+        lines.append(f"_Out-of-scale values: {sorted(set(out_of_scale))}_")
+        lines.append("")
+    return lines
+
+
 def sanitize_non_finite_floats(value: Any) -> Any:
     if isinstance(value, float) and not math.isfinite(value):
         return None
@@ -158,6 +220,13 @@ def main() -> int:
     output_dir = root / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    excluded_evaluator_ids = {
+        evaluator_id.strip()
+        for evaluator_id in args.exclude_evaluator_ids.split(",")
+        if evaluator_id.strip()
+    }
+    filename_suffix = args.filename_suffix or ""
+
     llm_rows: list[dict[str, Any]] = []
     for csv_path in sorted(llm_output_dir.glob("*.csv")):
         for row in read_csv_rows(csv_path):
@@ -177,7 +246,11 @@ def main() -> int:
     nudge_by_id = {row["id"]: row for row in nudges}
 
     human_rows: list[dict[str, Any]] = []
+    excluded_response_count = 0
     for row in responses:
+        if excluded_evaluator_ids and row.get("evaluator_id", "") in excluded_evaluator_ids:
+            excluded_response_count += 1
+            continue
         score = safe_float(row.get("score_int"))
         question = question_by_id.get(row["question_id"])
         nudge = nudge_by_id.get(row["nudge_id"])
@@ -258,16 +331,18 @@ def main() -> int:
             },
         )
 
-    non_ci_pair_rows = [row for row in pair_rows if not row["stable_key"].startswith("ci_")]
+    # Likert-scale axes = all stable_keys except the context-inclusion (ci_*) ones,
+    # which use a binary 1/7 encoding and are analyzed separately below.
+    likert_pair_rows = [row for row in pair_rows if not row["stable_key"].startswith("ci_")]
     ci_pair_rows = [row for row in pair_rows if row["stable_key"].startswith("ci_")]
-    non_ci_pair_keys = {(row["human_nudge_id"], row["stable_key"]) for row in non_ci_pair_rows}
+    likert_pair_keys = {(row["human_nudge_id"], row["stable_key"]) for row in likert_pair_rows}
 
-    llm_means = [row["llm_mean"] for row in non_ci_pair_rows]
-    human_means = [row["human_mean"] for row in non_ci_pair_rows]
+    llm_means = [row["llm_mean"] for row in likert_pair_rows]
+    human_means = [row["human_mean"] for row in likert_pair_rows]
     signed_diffs = [x - y for x, y in zip(llm_means, human_means)]
     abs_diffs = [abs(diff) for diff in signed_diffs]
 
-    if non_ci_pair_rows:
+    if likert_pair_rows:
         mae = sum(abs_diffs) / len(abs_diffs)
         rmse = (sum(diff**2 for diff in signed_diffs) / len(signed_diffs)) ** 0.5
         mean_diff = sum(signed_diffs) / len(signed_diffs)
@@ -277,11 +352,11 @@ def main() -> int:
         mean_diff = float("nan")
 
     overall = {
-        "n_pairs": len(non_ci_pair_rows),
-        "n_mapped_human_nudges_in_pairs": len({row["human_nudge_id"] for row in non_ci_pair_rows}),
-        "n_stable_keys_in_pairs": len({row["stable_key"] for row in non_ci_pair_rows}),
-        "pearson": pearson(llm_means, human_means) if non_ci_pair_rows else float("nan"),
-        "spearman": spearman(llm_means, human_means) if non_ci_pair_rows else float("nan"),
+        "n_pairs": len(likert_pair_rows),
+        "n_mapped_human_nudges_in_pairs": len({row["human_nudge_id"] for row in likert_pair_rows}),
+        "n_stable_keys_in_pairs": len({row["stable_key"] for row in likert_pair_rows}),
+        "pearson": pearson(llm_means, human_means) if likert_pair_rows else float("nan"),
+        "spearman": spearman(llm_means, human_means) if likert_pair_rows else float("nan"),
         "mae": mae,
         "rmse": rmse,
         "mean_diff_llm_minus_human": mean_diff,
@@ -487,24 +562,104 @@ def main() -> int:
         },
     }
 
-    # Rating distribution analysis (non-CI only), computed on comparable mapped pairs.
-    human_non_ci_scores = [
+    # Rating distribution analysis (Likert-scale axes only), computed on comparable mapped pairs.
+    human_likert_scores = [
         float(row["score_int"])
         for row in human_rows
-        if (row["human_nudge_id"], row["stable_key"]) in non_ci_pair_keys
+        if (row["human_nudge_id"], row["stable_key"]) in likert_pair_keys
     ]
-    llm_non_ci_scores = [
+    llm_likert_scores = [
         float(row["score_int"])
         for row in llm_rows
         if row["score_int"] is not None
         and row.get("stable_key", "").startswith("ci_") is False
-        and (llm_to_human_nudge_id.get(row["nudge_id"]), row["stable_key"]) in non_ci_pair_keys
+        and (llm_to_human_nudge_id.get(row["nudge_id"]), row["stable_key"]) in likert_pair_keys
     ]
-    non_ci_rating_distribution = {
-        "scope": "comparable mapped non-CI rows only",
-        "human": summarize_rating_distribution(human_non_ci_scores),
-        "llm": summarize_rating_distribution(llm_non_ci_scores),
+    likert_rating_distribution = {
+        "scope": "comparable mapped Likert-scale rows only",
+        "human": summarize_rating_distribution(human_likert_scores),
+        "llm": summarize_rating_distribution(llm_likert_scores),
     }
+
+    # Per-question rating distributions: group comparable-mapped rows by stable_key
+    # (both Likert-scale and CI included) so we can render histograms for every question.
+    all_pair_keys = {(row["human_nudge_id"], row["stable_key"]) for row in pair_rows}
+
+    human_scores_by_key: dict[str, list[float]] = defaultdict(list)
+    for row in human_rows:
+        if (row["human_nudge_id"], row["stable_key"]) in all_pair_keys:
+            human_scores_by_key[row["stable_key"]].append(float(row["score_int"]))
+
+    llm_scores_by_key: dict[str, list[float]] = defaultdict(list)
+    for row in llm_rows:
+        if row["score_int"] is None:
+            continue
+        human_nudge_id = llm_to_human_nudge_id.get(row["nudge_id"])
+        if human_nudge_id is None:
+            continue
+        if (human_nudge_id, row["stable_key"]) not in all_pair_keys:
+            continue
+        llm_scores_by_key[row["stable_key"]].append(float(row["score_int"]))
+
+    per_key_rating_distribution: list[dict[str, Any]] = []
+    for stable_key in sorted(set(list(human_scores_by_key.keys()) + list(llm_scores_by_key.keys()))):
+        per_key_rating_distribution.append(
+            {
+                "stable_key": stable_key,
+                "human": summarize_rating_distribution(human_scores_by_key.get(stable_key, [])),
+                "llm": summarize_rating_distribution(llm_scores_by_key.get(stable_key, [])),
+            }
+        )
+
+    # Write a standalone markdown snippet with per-question histograms so it can be
+    # pasted into / referenced from the main comparison report.
+    histogram_lines: list[str] = [
+        "# Per-question rating histograms (LLM vs Human)",
+        "",
+        "Scope: comparable mapped rows only (same rows that feed the pairwise comparisons "
+        "in `summary.json`). Each question gets a pair of histograms — human ratings on top, "
+        "LLM ratings below. Bars are scaled relative to the most-frequent bin within that histogram.",
+        "",
+        "## Overall (Likert-scale axes)",
+        "",
+    ]
+    histogram_lines.extend(
+        render_histogram_block(
+            "### Human ratings (Likert-scale, comparable rows)",
+            human_likert_scores,
+        )
+    )
+    histogram_lines.extend(
+        render_histogram_block(
+            "### LLM ratings (Likert-scale, comparable rows)",
+            llm_likert_scores,
+        )
+    )
+    histogram_lines.append("## Per stable_key")
+    histogram_lines.append("")
+    for entry in per_key_rating_distribution:
+        stable_key = entry["stable_key"]
+        human_n = entry["human"]["n"]
+        llm_n = entry["llm"]["n"]
+        histogram_lines.append(
+            f"### `{stable_key}`  —  N_human={human_n}, N_llm={llm_n}"
+        )
+        histogram_lines.append("")
+        histogram_lines.extend(
+            render_histogram_block(
+                "Human ratings",
+                human_scores_by_key.get(stable_key, []),
+            )
+        )
+        histogram_lines.extend(
+            render_histogram_block(
+                "LLM ratings",
+                llm_scores_by_key.get(stable_key, []),
+            )
+        )
+
+    histogram_path = output_dir / f"per_key_histograms{filename_suffix}.md"
+    histogram_path.write_text("\n".join(histogram_lines) + "\n", encoding="utf-8")
 
     summary = {
         "overall": overall,
@@ -519,12 +674,13 @@ def main() -> int:
             "unmapped_llm_nudges": len(llm_nudges) - len(llm_to_human_nudge_id),
             "ambiguous_llm_nudges": len(ambiguous_matches),
             "paired_rows_total_including_ci": len(pair_rows),
-            "paired_rows_non_ci": len(non_ci_pair_rows),
+            "paired_rows_likert": len(likert_pair_rows),
             "paired_rows_ci": len(ci_pair_rows),
         },
         "overall_including_ci": overall_including_ci,
         "diff_distribution": diff_distribution,
-        "non_ci_rating_distribution": non_ci_rating_distribution,
+        "likert_rating_distribution": likert_rating_distribution,
+        "per_key_rating_distribution": per_key_rating_distribution,
         "context_inclusion_binary": {
             "mapping": {"1": "no", "7": "yes"},
             "value_check": {
@@ -549,9 +705,17 @@ def main() -> int:
         "by_nudge": by_nudge,
         "ambiguous_matches": ambiguous_matches,
         "unmapped_llm_nudge_ids": sorted(set(llm_nudges) - set(llm_to_human_nudge_id)),
+        "filter_metadata": {
+            "excluded_evaluator_ids": sorted(excluded_evaluator_ids),
+            "excluded_response_count": excluded_response_count,
+            "filename_suffix": filename_suffix,
+        },
     }
 
-    with (output_dir / "summary.json").open("w", encoding="utf-8") as file:
+    summary_path = output_dir / f"summary{filename_suffix}.json"
+    pairs_path = output_dir / f"pairs{filename_suffix}.csv"
+
+    with summary_path.open("w", encoding="utf-8") as file:
         try:
             json.dump(summary, file, indent=2, allow_nan=False)
         except ValueError:
@@ -564,14 +728,21 @@ def main() -> int:
         fieldnames = list(pair_rows[0].keys())
     else:
         fieldnames = ["human_nudge_id", "stable_key", "llm_mean", "human_mean"]
-    with (output_dir / "pairs.csv").open("w", newline="", encoding="utf-8") as file:
+    with pairs_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         for row in pair_rows:
             writer.writerow(row)
 
-    print(f"Wrote summary: {output_dir / 'summary.json'}")
-    print(f"Wrote pairwise rows: {output_dir / 'pairs.csv'}")
+    print(f"Wrote summary: {summary_path}")
+    print(f"Wrote pairwise rows: {pairs_path}")
+    print(f"Wrote per-question histograms: {histogram_path}")
+    if excluded_evaluator_ids:
+        print(
+            f"Excluded {excluded_response_count} human responses from "
+            f"{len(excluded_evaluator_ids)} evaluator(s): "
+            f"{sorted(excluded_evaluator_ids)}"
+        )
     print(
         "Overall -> "
         f"pairs={overall['n_pairs']}, "
@@ -606,11 +777,11 @@ def main() -> int:
         f"human_unique={human_ci_unique_values}"
     )
     print(
-        "Non-CI distributions -> "
-        f"human_n={non_ci_rating_distribution['human']['n']}, "
-        f"llm_n={non_ci_rating_distribution['llm']['n']}, "
-        f"human_mean={non_ci_rating_distribution['human']['mean']:.3f}, "
-        f"llm_mean={non_ci_rating_distribution['llm']['mean']:.3f}"
+        "Likert-scale distributions -> "
+        f"human_n={likert_rating_distribution['human']['n']}, "
+        f"llm_n={likert_rating_distribution['llm']['n']}, "
+        f"human_mean={likert_rating_distribution['human']['mean']:.3f}, "
+        f"llm_mean={likert_rating_distribution['llm']['mean']:.3f}"
     )
     return 0
 

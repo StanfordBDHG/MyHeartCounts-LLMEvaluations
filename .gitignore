@@ -158,3 +158,9 @@ data/
 
 # Analysis temp files
 analysis_temp/
+
+# Plots
+plots/
+
+# Reports
+reports/

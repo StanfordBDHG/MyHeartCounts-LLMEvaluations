@@ -2,6 +2,10 @@ project-includes = [
     "**/*.py*",
 ]
 
+search-path = [
+    "nudge-generation/scripts/nudge-curation-v1",
+]
+
 ignore-missing-imports = [
     "mlx_lm",
     "mlx",

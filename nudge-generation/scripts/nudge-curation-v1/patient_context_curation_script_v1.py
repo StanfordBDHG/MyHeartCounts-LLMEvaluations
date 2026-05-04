@@ -50,7 +50,7 @@ NOTIFICATION_TIMES = ["7:00 AM", "12:00 PM", "6:00 PM"]
 # Required disease distribution:
 # - 2 disease-free contexts (None)
 # - 1 each for the five disease categories below
-DISEASE_BUCKETS = [
+DISEASE_BUCKETS: list[str | None] = [
     None,
     None,
     "Heart failure",
@@ -60,11 +60,18 @@ DISEASE_BUCKETS = [
     "ACHD (complex)",
 ]
 
+DISEASE_BUCKETS_V2: list[str | None] = [
+    "Class III pulmonary arterial hypertension",
+    "High fall risk",
+]
 
-def build_curated_contexts(seed: int) -> list[dict[str, Any]]:
-    """Build 7 patient contexts with deterministic randomness and fixed disease mix."""
+
+def build_curated_contexts(
+    seed: int, diseases: list[str | None]
+) -> list[dict[str, Any]]:
+    """Build one patient context per entry in ``diseases`` with deterministic randomness."""
     rng = random.Random(seed)
-    disease_values = DISEASE_BUCKETS.copy()
+    disease_values = list(diseases)
     rng.shuffle(disease_values)
 
     contexts: list[dict[str, Any]] = []
@@ -87,7 +94,7 @@ def build_curated_contexts(seed: int) -> list[dict[str, Any]]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate 7 deterministic, curated patient contexts as JSON."
+        description="Generate deterministic, curated patient contexts as JSON."
     )
     parser.add_argument(
         "--seed",
@@ -106,12 +113,18 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Pretty-print JSON output with indentation.",
     )
+    parser.add_argument(
+        "--v2",
+        action="store_true",
+        help="Use the v2 disease list (DISEASE_BUCKETS_V2) instead of the default.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    contexts = build_curated_contexts(seed=args.seed)
+    diseases = DISEASE_BUCKETS_V2 if args.v2 else DISEASE_BUCKETS
+    contexts = build_curated_contexts(seed=args.seed, diseases=diseases)
     indent = 2 if args.pretty else None
     payload = json.dumps(contexts, indent=indent)
 
