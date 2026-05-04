@@ -128,3 +128,24 @@ main {
   height: 18px;
   margin: 0;
 }
+
+.low-score-comment-cell {
+  background: #fff7ed;
+  border-top: none !important;
+}
+
+.low-score-comment-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+.low-score-comment-textarea {
+  width: 100%;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+  resize: vertical;
+}

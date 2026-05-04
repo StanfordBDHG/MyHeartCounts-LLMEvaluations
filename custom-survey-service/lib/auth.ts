@@ -7,25 +7,36 @@
 //
 
 import bcrypt from "bcryptjs";
+import type { SessionFlow } from "@/lib/constants";
 import { getServiceClient } from "@/lib/db/server";
 import type { EvaluatorRow } from "@/types/db";
 
-const STANFORD_DOMAIN = "@stanford.edu";
+const EDU_DOMAIN_SUFFIX = ".edu";
+
+export interface VerifyCredentialsResult {
+  evaluator: EvaluatorRow;
+  flow: SessionFlow;
+}
 
 const normalizeWhitespace = (value: string): string =>
   value.trim().replace(/\s+/g, " ");
 
-const isStanfordAffiliateEmail = (email: string): boolean =>
-  email.toLowerCase().trim().endsWith(STANFORD_DOMAIN);
+const isEduAffiliateEmail = (email: string): boolean =>
+  email.toLowerCase().trim().endsWith(EDU_DOMAIN_SUFFIX);
 
-const getStanfordSharedPassword = (): string | null => {
+const getStudyAffiliatePassword = (): string | null => {
   return process.env.STANFORD_AFFILIATE_PASSWORD?.trim() ?? null;
 };
 
-const upsertStanfordAffiliate = async (args: {
+const getDoctorAffiliatePassword = (): string | null => {
+  return process.env.DOCTOR_AFFILIATE_PASSWORD?.trim() ?? null;
+};
+
+const upsertEduAffiliate = async (args: {
   email: string;
   firstName: string;
   lastName: string;
+  initialHashPassword: string;
 }): Promise<EvaluatorRow | null> => {
   const supabase = getServiceClient();
   const normalizedEmail = args.email.toLowerCase().trim();
@@ -68,11 +79,12 @@ const upsertStanfordAffiliate = async (args: {
     };
   }
 
-  const sharedPassword = getStanfordSharedPassword();
-  if (!sharedPassword) {
-    return null;
-  }
-  const sharedPasswordHash = await bcrypt.hash(sharedPassword, 10);
+  // First time we have seen this affiliate. Store a hash of whichever shared
+  // password they used to satisfy the NOT NULL evaluator_code_hash column.
+  // Subsequent shared-password matches are validated against the env var, not
+  // this hash, so it does not need to be updated when the affiliate later
+  // logs in via the other shared password.
+  const sharedPasswordHash = await bcrypt.hash(args.initialHashPassword, 10);
   const { data: inserted, error: insertError } = await supabase
     .from("evaluators")
     .insert({
@@ -86,8 +98,8 @@ const upsertStanfordAffiliate = async (args: {
     .single();
 
   if (insertError) {
-    // If two requests race to create the same Stanford affiliate row,
-    // fall back to reading the now-existing evaluator.
+    // If two requests race to create the same .edu affiliate row, fall back
+    // to reading the now-existing evaluator.
     const { data: racedExisting, error: racedLookupError } = await supabase
       .from("evaluators")
       .select("id, email, evaluator_code_hash, active, first_name, last_name")
@@ -108,31 +120,53 @@ export const verifyEvaluatorCredentials = async (
   evaluatorId: string,
   firstName?: string,
   lastName?: string,
-): Promise<EvaluatorRow | null> => {
+): Promise<VerifyCredentialsResult | null> => {
   const supabase = getServiceClient();
   const normalizedEmail = email.toLowerCase().trim();
   const normalizedEvaluatorId = evaluatorId.trim();
-  const stanfordEmail = isStanfordAffiliateEmail(normalizedEmail);
+  const eduEmail = isEduAffiliateEmail(normalizedEmail);
 
-  if (stanfordEmail) {
-    const sharedPassword = getStanfordSharedPassword();
-    if (!sharedPassword) {
-      return null;
-    }
+  const studyPassword = getStudyAffiliatePassword();
+  const doctorPassword = getDoctorAffiliatePassword();
+
+  if (eduEmail) {
     const normalizedFirstName = firstName ? normalizeWhitespace(firstName) : "";
     const normalizedLastName = lastName ? normalizeWhitespace(lastName) : "";
     if (!normalizedFirstName || !normalizedLastName) {
       return null;
     }
-    if (normalizedEvaluatorId !== sharedPassword) {
-      return null;
+
+    if (doctorPassword && normalizedEvaluatorId === doctorPassword) {
+      const evaluator = await upsertEduAffiliate({
+        email: normalizedEmail,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
+        initialHashPassword: doctorPassword,
+      });
+      return evaluator ? { evaluator, flow: "doctor" } : null;
     }
 
-    return upsertStanfordAffiliate({
-      email: normalizedEmail,
-      firstName: normalizedFirstName,
-      lastName: normalizedLastName,
-    });
+    if (studyPassword && normalizedEvaluatorId === studyPassword) {
+      const evaluator = await upsertEduAffiliate({
+        email: normalizedEmail,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
+        initialHashPassword: studyPassword,
+      });
+      return evaluator ? { evaluator, flow: "standard" } : null;
+    }
+
+    return null;
+  }
+
+  // Non-.edu branch: refuse either shared password so a seeded evaluator code
+  // that happens to equal a shared password cannot leak into either flow,
+  // and so the doctor flow is unreachable without a .edu email.
+  if (
+    (studyPassword && normalizedEvaluatorId === studyPassword) ||
+    (doctorPassword && normalizedEvaluatorId === doctorPassword)
+  ) {
+    return null;
   }
 
   const { data, error } = await supabase
@@ -155,5 +189,5 @@ export const verifyEvaluatorCredentials = async (
     return null;
   }
 
-  return evaluator;
+  return { evaluator, flow: "standard" };
 };

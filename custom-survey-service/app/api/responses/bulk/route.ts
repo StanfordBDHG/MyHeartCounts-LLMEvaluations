@@ -14,6 +14,7 @@ const responseSchema = z.object({
   questionId: z.uuid(),
   nudgeId: z.uuid(),
   score: z.number().int().min(1).max(7),
+  comment: z.string().trim().max(2000).optional(),
 });
 
 const bodySchema = z.object({
@@ -105,6 +106,7 @@ export const POST = async (request: Request) => {
       question_id: entry.questionId,
       nudge_id: entry.nudgeId,
       score_int: entry.score,
+      optional_comment: entry.comment ?? null,
     })),
     { onConflict: "session_id,evaluator_id,question_id,nudge_id" },
   );

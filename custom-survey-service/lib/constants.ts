@@ -7,12 +7,17 @@
 //
 
 export const DEFAULT_NUDGES_PER_SESSION = 4;
+export const DOCTOR_NUDGES_PER_SESSION = 15;
 
 export const BUNDLE_A = "bundle_a";
 export const BUNDLE_B = "bundle_b";
+export const BUNDLE_DOCTOR = "bundle_doctor";
 
 export const BUNDLE_A_NAME = "Context Inclusion + Appropriateness";
 export const BUNDLE_B_NAME = "Coherence + Motivation + Actionability";
+export const BUNDLE_DOCTOR_NAME = "Clinical Safety Review";
+
+export type SessionFlow = "standard" | "doctor";
 
 let cachedAssignmentSalt: string | null = null;
 

@@ -24,10 +24,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isStanfordAffiliate = email
-    .trim()
-    .toLowerCase()
-    .endsWith("@stanford.edu");
+  const isEduAffiliate = email.trim().toLowerCase().endsWith(".edu");
 
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -38,8 +35,8 @@ export default function LoginPage() {
     const normalizedFirstName = firstName.trim();
     const normalizedLastName = lastName.trim();
 
-    if (isStanfordAffiliate && (!normalizedFirstName || !normalizedLastName)) {
-      setError("Stanford affiliate login requires first and last name.");
+    if (isEduAffiliate && (!normalizedFirstName || !normalizedLastName)) {
+      setError(".edu affiliate login requires first and last name.");
       setSubmitting(false);
       return;
     }
@@ -108,7 +105,7 @@ export default function LoginPage() {
               />
             </label>
           </div>
-          {isStanfordAffiliate ? (
+          {isEduAffiliate ? (
             <>
               <div style={{ marginBottom: 12 }}>
                 <label>
@@ -138,8 +135,8 @@ export default function LoginPage() {
           ) : null}
           <div style={{ marginBottom: 12 }}>
             <label>
-              {isStanfordAffiliate
-                ? "Stanford shared password"
+              {isEduAffiliate
+                ? "Study shared password"
                 : "Evaluator ID/Password"}
               <input
                 className="input"
@@ -150,8 +147,8 @@ export default function LoginPage() {
               />
             </label>
             <p className="muted">
-              {isStanfordAffiliate
-                ? "Use the Stanford affiliate password shared by the study team."
+              {isEduAffiliate
+                ? "Use the affiliate password shared by the study team."
                 : "Use the evaluator ID/Password provided by your onboarding team."}
             </p>
           </div>

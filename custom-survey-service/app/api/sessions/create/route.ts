@@ -12,8 +12,12 @@ import { chooseBundle, chooseNudges } from "@/lib/assignment/engine";
 import { verifyEvaluatorCredentials } from "@/lib/auth";
 import {
   BUNDLE_A,
+  BUNDLE_DOCTOR,
+  BUNDLE_DOCTOR_NAME,
   DEFAULT_NUDGES_PER_SESSION,
+  DOCTOR_NUDGES_PER_SESSION,
   getAssignmentSalt,
+  type SessionFlow,
 } from "@/lib/constants";
 import { getServiceClient } from "@/lib/db/server";
 import { hashToFloat } from "@/lib/hash";
@@ -161,18 +165,26 @@ export const POST = async (request: Request) => {
     );
   }
 
-  const evaluator = await verifyEvaluatorCredentials(
+  const credentials = await verifyEvaluatorCredentials(
     parsed.data.email,
     parsed.data.evaluatorId,
     parsed.data.firstName,
     parsed.data.lastName,
   );
-  if (!evaluator) {
+  if (!credentials) {
     return NextResponse.json(
       { error: "Invalid credentials." },
       { status: 401 },
     );
   }
+  const { evaluator, flow } = credentials;
+  const isDoctorFlow = flow === "doctor";
+  const nudgesPerSession = isDoctorFlow
+    ? DOCTOR_NUDGES_PER_SESSION
+    : DEFAULT_NUDGES_PER_SESSION;
+  const eligibilityColumn = isDoctorFlow
+    ? "eligible_doctor"
+    : "eligible_standard";
 
   const supabase = getServiceClient();
 
@@ -184,39 +196,58 @@ export const POST = async (request: Request) => {
       .from("sessions")
       .select("id", { count: "exact", head: true })
       .eq("evaluator_id", evaluator.id)
+      .eq("flow", flow)
       .not("completed_at", "is", null),
     supabase
       .from("nudges")
-      .select("id, title, body, source_model, metadata_json, active")
-      .eq("active", true),
+      .select(
+        "id, title, body, source_model, metadata_json, active, eligible_standard, eligible_doctor",
+      )
+      .eq("active", true)
+      .eq(eligibilityColumn, true),
   ]);
   const evaluatorSessionCountNumber = evaluatorSessionCount ?? 0;
   const allNudgesRows = (allNudges ?? []) as NudgeRow[];
 
-  if (nudgeError || allNudgesRows.length < DEFAULT_NUDGES_PER_SESSION) {
+  if (nudgeError || allNudgesRows.length < nudgesPerSession) {
     return NextResponse.json(
-      { error: "Not enough active nudges to create a session." },
+      {
+        error: isDoctorFlow
+          ? `Not enough doctor-eligible nudges to create a session (need ${DOCTOR_NUDGES_PER_SESSION}).`
+          : "Not enough active nudges to create a session.",
+      },
       { status: 400 },
     );
   }
 
+  // Per-flow exposure: doctor and standard pools track their own exposure
+  // counts so that flagging a nudge as eligible for both flows still yields
+  // congruent "lowest exposure first" assignment within each flow.
   const [
     { data: bundleRows, error: bundleRowsError },
     { data: globalNudgeRows, error: globalNudgeRowsError },
     { data: seenNudges, error: seenNudgesError },
   ] = await Promise.all([
+    isDoctorFlow
+      ? Promise.resolve({
+          data: [] as SessionBundleRow[],
+          error: null,
+        })
+      : supabase
+          .from("session_bundle")
+          .select("bundle_id, sessions!inner(id, flow, completed_at)")
+          .eq("sessions.flow", flow)
+          .not("sessions.completed_at", "is", null),
     supabase
-      .from("session_bundle")
-      .select("bundle_id, sessions!inner(id)")
+      .from("session_nudges")
+      .select("nudge_id, sessions!inner(id, flow, completed_at)")
+      .eq("sessions.flow", flow)
       .not("sessions.completed_at", "is", null),
     supabase
       .from("session_nudges")
-      .select("nudge_id, sessions!inner(id)")
-      .not("sessions.completed_at", "is", null),
-    supabase
-      .from("session_nudges")
-      .select("nudge_id, sessions!inner(id)")
+      .select("nudge_id, sessions!inner(id, flow, completed_at)")
       .eq("evaluator_id", evaluator.id)
+      .eq("sessions.flow", flow)
       .not("sessions.completed_at", "is", null),
   ]);
 
@@ -267,13 +298,16 @@ export const POST = async (request: Request) => {
     previouslySeenNudgeIds: new Set(
       seenNudgeRowsData.map((row) => row.nudge_id),
     ),
+    n: nudgesPerSession,
   });
 
-  const bundleChoice = chooseBundle({
-    evaluatorId: evaluator.id,
-    evaluatorSessionCount: evaluatorSessionCountNumber,
-    bundleCounts,
-  });
+  const bundleChoice = isDoctorFlow
+    ? { id: BUNDLE_DOCTOR, name: BUNDLE_DOCTOR_NAME }
+    : chooseBundle({
+        evaluatorId: evaluator.id,
+        evaluatorSessionCount: evaluatorSessionCountNumber,
+        bundleCounts,
+      });
 
   const { data: bundleItems, error: sessionQuestionError } = await supabase
     .from("question_bundle_items")
@@ -337,12 +371,19 @@ export const POST = async (request: Request) => {
     );
   }
 
+  const sessionInsertPayload: {
+    evaluator_id: string;
+    seed: string;
+    flow: SessionFlow;
+  } = {
+    evaluator_id: evaluator.id,
+    seed: `${evaluator.id}:${evaluatorSessionCountNumber + 1}`,
+    flow,
+  };
+
   const { data: sessionRow, error: sessionError } = await supabase
     .from("sessions")
-    .insert({
-      evaluator_id: evaluator.id,
-      seed: `${evaluator.id}:${evaluatorSessionCountNumber + 1}`,
-    })
+    .insert(sessionInsertPayload)
     .select("id")
     .single();
 
@@ -387,5 +428,6 @@ export const POST = async (request: Request) => {
   return NextResponse.json({
     sessionId: createdSession.id,
     bundleId: bundleChoice.id,
+    flow,
   });
 };

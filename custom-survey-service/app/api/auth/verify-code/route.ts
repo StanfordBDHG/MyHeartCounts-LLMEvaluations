@@ -28,19 +28,23 @@ export const POST = async (request: Request) => {
     );
   }
 
-  const evaluator = await verifyEvaluatorCredentials(
+  const result = await verifyEvaluatorCredentials(
     parsed.data.email,
     parsed.data.evaluatorId,
     parsed.data.firstName,
     parsed.data.lastName,
   );
 
-  if (!evaluator) {
+  if (!result) {
     return NextResponse.json(
       { error: "Invalid credentials." },
       { status: 401 },
     );
   }
 
-  return NextResponse.json({ ok: true, evaluatorId: evaluator.id });
+  return NextResponse.json({
+    ok: true,
+    evaluatorId: result.evaluator.id,
+    flow: result.flow,
+  });
 };

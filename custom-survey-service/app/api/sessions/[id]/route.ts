@@ -12,6 +12,7 @@ import { getServiceClient } from "@/lib/db/server";
 interface SessionRow {
   id: string;
   evaluator_id: string;
+  flow: "standard" | "doctor";
 }
 
 interface BundleRelation {
@@ -71,7 +72,7 @@ export const GET = async (
   ] = await Promise.all([
     supabase
       .from("sessions")
-      .select("id, evaluator_id")
+      .select("id, evaluator_id, flow")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -105,6 +106,7 @@ export const GET = async (
   const responsePayload = {
     sessionId: typedSession.id,
     evaluatorId: typedSession.evaluator_id,
+    flow: typedSession.flow,
     bundle: {
       id: typedBundle.bundle_id,
       name: oneOrNull(typedBundle.question_bundles)?.name ?? "Unknown",
