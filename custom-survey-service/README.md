@@ -14,7 +14,7 @@ Next.js survey service for MyHeartCounts motivational nudge evaluation.
 - Alternate `.edu` affiliate login for any `*.edu` email with a shared password, plus required first/last name capture
 - Two parallel survey flows, selected by which shared password the affiliate enters:
   - **Standard flow** (`STANFORD_AFFILIATE_PASSWORD`): bundle A or B with **4 nudges** per session
-  - **Doctor flow** (`DOCTOR_AFFILIATE_PASSWORD`): single `ap_comorbidity` question with **15 nudges** per session, with an inline free-response prompt whenever the rater scores 3 or lower; doctor responses are MD-flagged via `sessions.flow = 'doctor'`
+  - **Doctor flow** (`DOCTOR_AFFILIATE_PASSWORD`): single `ap_comorbidity` question with **all `eligible_doctor=TRUE` nudges** shown per session (session size is derived from the DB at request time, not a fixed constant), with an inline free-response prompt whenever the rater scores 3 or lower; doctor responses are MD-flagged via `sessions.flow = 'doctor'`
 - Two fixed, mutually exclusive question bundles for the standard flow:
   - `bundle_a`: context inclusion + appropriateness
   - `bundle_b`: coherence + motivation + actionability

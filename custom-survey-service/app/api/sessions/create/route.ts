@@ -15,7 +15,6 @@ import {
   BUNDLE_DOCTOR,
   BUNDLE_DOCTOR_NAME,
   DEFAULT_NUDGES_PER_SESSION,
-  DOCTOR_NUDGES_PER_SESSION,
   getAssignmentSalt,
   type SessionFlow,
 } from "@/lib/constants";
@@ -179,9 +178,6 @@ export const POST = async (request: Request) => {
   }
   const { evaluator, flow } = credentials;
   const isDoctorFlow = flow === "doctor";
-  const nudgesPerSession = isDoctorFlow
-    ? DOCTOR_NUDGES_PER_SESSION
-    : DEFAULT_NUDGES_PER_SESSION;
   const eligibilityColumn = isDoctorFlow
     ? "eligible_doctor"
     : "eligible_standard";
@@ -209,11 +205,23 @@ export const POST = async (request: Request) => {
   const evaluatorSessionCountNumber = evaluatorSessionCount ?? 0;
   const allNudgesRows = (allNudges ?? []) as NudgeRow[];
 
-  if (nudgeError || allNudgesRows.length < nudgesPerSession) {
+  // Doctor sessions show the entire eligible pool; the size is derived from
+  // the DB at request time so toggling `eligible_doctor` in Supabase changes
+  // the doctor-flow session size without a code change. Standard sessions
+  // remain a fixed-size sample from the standard-eligible pool.
+  const nudgesPerSession = isDoctorFlow
+    ? allNudgesRows.length
+    : DEFAULT_NUDGES_PER_SESSION;
+
+  const insufficientNudges = isDoctorFlow
+    ? nudgesPerSession === 0
+    : allNudgesRows.length < nudgesPerSession;
+
+  if (nudgeError || insufficientNudges) {
     return NextResponse.json(
       {
         error: isDoctorFlow
-          ? `Not enough doctor-eligible nudges to create a session (need ${DOCTOR_NUDGES_PER_SESSION}).`
+          ? "No doctor-eligible nudges are available to create a session."
           : "Not enough active nudges to create a session.",
       },
       { status: 400 },

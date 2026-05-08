@@ -7,7 +7,6 @@
 //
 
 export const DEFAULT_NUDGES_PER_SESSION = 4;
-export const DOCTOR_NUDGES_PER_SESSION = 15;
 
 export const BUNDLE_A = "bundle_a";
 export const BUNDLE_B = "bundle_b";
