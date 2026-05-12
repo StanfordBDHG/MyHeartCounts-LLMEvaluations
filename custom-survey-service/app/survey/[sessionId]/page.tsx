@@ -86,6 +86,46 @@ const readPromptMetadata = (nudge: Nudge): Record<string, unknown> => {
   return nested ?? topLevel;
 };
 
+const readPromptContext = (nudge: Nudge): Record<string, unknown> => {
+  const topLevel = asRecord(nudge.metadata_json) ?? {};
+  return asRecord(topLevel.prompt_context) ?? {};
+};
+
+interface DiseaseDescription {
+  label: string;
+  description: string;
+}
+
+// Collect unique (disease label -> description) pairs across the nudges shown
+// in the current session. The disease label comes from
+// `prompt_metadata.comorbidities` and the long description from
+// `prompt_context.comorbidities`, both of which the importer populates from
+// the generator CSV (which itself sources them from
+// `nudge-generation/config/prompts/prompt_constants.v1.json`). Pulling from
+// the per-nudge metadata avoids a second source of truth and works even if
+// the prompt_constants file is updated after nudges were imported.
+const collectDiseaseDescriptions = (nudges: Nudge[]): DiseaseDescription[] => {
+  const byLabel = new Map<string, string>();
+  for (const nudge of nudges) {
+    const promptMetadata = readPromptMetadata(nudge);
+    const promptContext = readPromptContext(nudge);
+    const rawLabel = promptMetadata.comorbidities;
+    const rawDescription = promptContext.comorbidities;
+    const label = typeof rawLabel === "string" ? rawLabel.trim() : "";
+    const description =
+      typeof rawDescription === "string" ? rawDescription.trim() : "";
+    if (!label || !description) {
+      continue;
+    }
+    if (!byLabel.has(label)) {
+      byLabel.set(label, description);
+    }
+  }
+  return Array.from(byLabel.entries())
+    .map(([label, description]) => ({ label, description }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+};
+
 const fieldForQuestion = (stableKey: string): MetadataField | null => {
   if (stableKey.endsWith("gender")) {
     return "gender";
@@ -190,6 +230,7 @@ export default function SurveyPage({
   const [scores, setScores] = useState<ScoreMap>({});
   const [comments, setComments] = useState<CommentMap>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -231,6 +272,45 @@ export default function SurveyPage({
         .length * session.nudges.length
     );
   }, [session]);
+
+  const diseaseDescriptions = useMemo<DiseaseDescription[]>(() => {
+    if (!session || session.flow !== "doctor") {
+      return [];
+    }
+    return collectDiseaseDescriptions(session.nudges);
+  }, [session]);
+
+  // Warn the evaluator before they accidentally close the tab, hit Back, or
+  // reload while they have in-progress responses. Modern browsers ignore the
+  // custom returnValue string and always show their own generic prompt; this
+  // only triggers for real browser navigations (not in-app router.push), so
+  // the post-submit redirect to the confirmation page is unaffected. We also
+  // suppress the listener once the submission has succeeded.
+  const hasUnsavedWork = useMemo(() => {
+    const anyScores = Object.values(scores).some(
+      (value) => typeof value === "number",
+    );
+    if (anyScores) {
+      return true;
+    }
+    return Object.values(comments).some(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    );
+  }, [scores, comments]);
+
+  useEffect(() => {
+    if (!hasUnsavedWork || submittedSuccessfully) {
+      return;
+    }
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedWork, submittedSuccessfully]);
 
   const answeredRequiredCount = useMemo(() => {
     if (!session) {
@@ -327,6 +407,7 @@ export default function SurveyPage({
         throw new Error("Submission failed.");
       }
 
+      setSubmittedSuccessfully(true);
       router.push("/survey/confirmation");
     } catch (requestError) {
       setError(
@@ -373,6 +454,31 @@ export default function SurveyPage({
           {question.body_markdown ? (
             <div className="muted question-markdown">
               <ReactMarkdown>{question.body_markdown}</ReactMarkdown>
+            </div>
+          ) : null}
+          {session.flow === "doctor" && diseaseDescriptions.length > 0 ? (
+            <div className="disease-context-panel">
+              <h4 className="disease-context-heading">
+                Patient disease context
+              </h4>
+              <p className="muted disease-context-intro">
+                The nudges below were generated for participants with the
+                following condition{diseaseDescriptions.length > 1 ? "s" : ""}.
+                Reference these descriptions when judging clinical safety.
+              </p>
+              <dl className="disease-context-list">
+                {diseaseDescriptions.map((entry) => (
+                  <div
+                    key={entry.label}
+                    className="disease-context-item"
+                  >
+                    <dt className="disease-context-label">{entry.label}</dt>
+                    <dd className="disease-context-description">
+                      {entry.description}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           ) : null}
           <table className="matrix">

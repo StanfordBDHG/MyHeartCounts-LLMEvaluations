@@ -149,3 +149,47 @@ main {
   font: inherit;
   resize: vertical;
 }
+
+.disease-context-panel {
+  margin: 12px 0 16px;
+  padding: 12px 16px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.disease-context-heading {
+  margin: 0 0 4px;
+  color: #1e3a8a;
+  font-size: 15px;
+}
+
+.disease-context-intro {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.disease-context-list {
+  margin: 0;
+}
+
+.disease-context-item {
+  margin-bottom: 8px;
+}
+
+.disease-context-item:last-child {
+  margin-bottom: 0;
+}
+
+.disease-context-label {
+  font-weight: 600;
+  color: #1e3a8a;
+  margin-bottom: 2px;
+}
+
+.disease-context-description {
+  margin: 0;
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.4;
+}
