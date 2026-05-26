@@ -22,6 +22,7 @@
     "build": "npm --prefix nudge-generation run build && npm --prefix custom-survey-service run build",
     "test:ci": "npm --prefix nudge-generation run test:ci",
     "supabase:heartbeat": "node scripts/supabase-heartbeat.mjs",
+    "supabase:backup": "python3 scripts/backup_supabase_public.py",
     "judge:llm": "npm --prefix nudge-evaluation/llm-as-judge run judge"
   },
   "devDependencies": {

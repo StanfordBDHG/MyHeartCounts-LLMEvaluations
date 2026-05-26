@@ -33,8 +33,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--supabase-table-dir",
-        default="data/backups/supabase/20260402T221023Z/public/tables",
-        help="Directory containing Supabase table CSV files.",
+        default="data/backups/supabase/latest/public/tables",
+        help=(
+            "Directory containing Supabase table CSV files "
+            "(default: latest backup from scripts/backup_supabase_public.py)."
+        ),
     )
     parser.add_argument(
         "--output-dir",
